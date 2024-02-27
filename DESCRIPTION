@@ -1,0 +1,5 @@
+Package: WookieTools
+Type: Package
+Title: Handy tools to complement Single-cell analysis with Seurat
+Version: 0.1
+RoxygenNote: 7.3.1
