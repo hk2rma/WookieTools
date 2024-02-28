@@ -1,0 +1,137 @@
+---
+title: "WookieTools Documentation"
+output: html_document
+date: "2024-02-28"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# WookieTools Documentation
+
+## Overview
+
+WookieTools is an R package that provides a collection of functions for processing and analyzing single-cell RNA sequencing (scRNA-seq) data using the Seurat package. These functions cover various aspects of quality control, doublet detection, data integration, and visualization.
+
+## Installation
+
+To use WookieTools, you can install it using the following R code:
+
+```{r, install Wookie Tools}
+# Install devtools if not already installed
+if (!requireNamespace("devtools", quietly = TRUE)) {
+  install.packages("devtools")
+}
+
+# Install WookieTools
+devtools::install_github("hk2rma/WookieTools")
+library(WookieTools)
+```
+
+Functions
+
+---------
+qc
+
+Description
+Performs quality control on a Seurat object by filtering cells based on specified criteria.
+
+Usage
+```{r qc}
+qc(matrix, nf_min = nf_min, nf_max = nf_max, nc = nc, pmt = pmt, group = 'orig.ident', colors = NULL)
+```
+matrix: Seurat object.
+nf_min: Minimum number of features.
+nf_max: Maximum number of features.
+nc: Maximum number of counts.
+pmt: Percentage of mitochondrial genes.
+group: Grouping variable.
+colors: Colors for facetting.
+
+
+scds_doublets
+
+Description
+Identifies doublets in scRNA-seq data using the scds package. Note: Use scrub_dub (scrublet) instead.
+
+Usage
+```{r scds}
+scds_doublets(matrix)
+```
+matrix: Seurat object.
+
+
+scrub_dub
+
+Description
+Identifies doublets in scRNA-seq data using the scrublet package.
+
+Usage
+```{r, scrublet}
+scrub_dub(seu_obj)
+```
+seu_obj: Seurat object.
+
+
+sum_matrices
+
+Description
+Merges two count matrices (Seurat objects) where the cells are the same, producing a single Seurat object with counts summed for each cell.
+
+Usage
+```{r sum matrices}
+sum_matrices(matrix1, matrix2, sample = 'sample', min_cells = 3, min_features = 200)
+```
+matrix1: First count matrix.
+matrix2: Second count matrix.
+sample: Sample/library name.
+min_cells: Minimum number of cells a gene is found in.
+min_features: Minimum number of features found in a cell.
+
+plot_multi_feat_umap
+
+Description
+Plots multiple UMAPs with varying numbers of features (e.g., highly variable genes) to assess the impact on the UMAP visualization.
+
+Usage
+```{r multiple feature UMAP}
+plot_multi_feat_umap(object = seu_obj, features = features, min.dist = 0.1, max_features = 3000, ftype='HVG', step = 500, out_name = 'combined_umap')
+```
+object: Seurat object.
+features: List of features.
+min.dist: Minimum distance for UMAP.
+max_features: Maximum number of features.
+ftype: Type of feature.
+step: Step size for feature iteration.
+out_name: Output variable name.
+
+
+plot_multi_min_dist_umap
+
+Description
+Plots multiple UMAPs with varying values of the min.dist parameter to explore its impact on the UMAP visualization.
+
+Usage
+```{r, multiple min.dist UMAP}
+plot_multi_min_dist_umap(object = seu_obj, features = features, out_name = 'min_dist_umaps')
+```
+object: Seurat object.
+features: List of features.
+out_name: Output variable name.
+
+multi_f_plots
+
+Description
+Plots multiple featurePlots from a Seurat object with a custom color scale.
+
+Usage
+```{r, multiple feature plots}
+multi_f_plots(seuratObject, featureList, ncol = 3, pt.size = 0.8)
+```
+seuratObject: Seurat object.
+featureList: List of features to plot.
+ncol: Number of columns for plot grid.
+pt.size: Point size for plotting.
+
+

@@ -1,9 +1,8 @@
 # WookieTools
 
-# Version 0.1
+# Version 0.1.1
 # All input objects are Seurat Objects unless mentioned otherwise
 # @export
-
 suppressMessages(library(Matrix))
 suppressMessages(library(dplyr))
 suppressMessages(library(tidyr))
@@ -34,6 +33,7 @@ suppressMessages(library(singleCellTK))
 #' @param group Grouping variable ...
 #' @param colors Colors for facetting ...
 #' @return Seurat object after quality control
+#' @export
 qc <- function(matrix, nf_min = nf_min, nf_max = nf_max, nc = nc, pmt = pmt, group = 'orig.ident', colors = NULL) {
   matrix[['percent.ribo']] <- PercentageFeatureSet(matrix, pattern = "^Rp[sl]")
   matrix[["percent.mt"]] <- PercentageFeatureSet(matrix, pattern = "^mt-")
@@ -80,6 +80,7 @@ qc <- function(matrix, nf_min = nf_min, nf_max = nf_max, nc = nc, pmt = pmt, gro
 #' @description Use not recommended ...
 #' @param matrix Seurat object ...
 #' @return Seurat object with doublet scores and call
+#' @export
 scds_doublets <- function(matrix){
   print('Not recommended!, use scrubdub (Scrublet) instead')
   suppressMessages(a_matrix <- NormalizeData(matrix))
@@ -122,6 +123,7 @@ scds_doublets <- function(matrix){
 #' @description Run Scrublet on a Seurat Object ...
 #' @param seu_obj Seurat object ...
 #' @return Seurat object with scrublet scores and call
+#' @export
 scrub_dub <- function(seu_obj){
   suppressMessages(seu_obj <- NormalizeData(seu_obj))
   suppressMessages(seu_obj <- FindVariableFeatures(seu_obj, selection.method = "vst", nfeatures = 3000))
@@ -150,6 +152,7 @@ scrub_dub <- function(seu_obj){
 #' @param min_cells minimum number cells a gene is found in ...
 #' @param min_features minimum number of features found in a cell ...
 #' @return Summed and merged Seurat object
+#' @export
 sum_matrices <- function(matrix1, matrix2, sample = 'sample', min_cells = 3, min_features = 200) {
   
   # Check if row names are identical
@@ -201,6 +204,7 @@ sum_matrices <- function(matrix1, matrix2, sample = 'sample', min_cells = 3, min
 #' @title Plot UMAPs to test features
 #' @description plot multiple UMAP's for different numbers of a feature i.e Highly variable genes or Most Abundant genes ...
 #' @return plot saved to global environment
+#' @export
 plot_multi_feat_umap <- function(object = seu_obj, features = features, min.dist = 0.1, 
                                  max_features = 3000,ftype='HVG',
                                  step = 500,out_name = 'combined_umap') {
@@ -231,6 +235,7 @@ plot_multi_feat_umap <- function(object = seu_obj, features = features, min.dist
 #' @title Plot UMAPs to test min.dist
 #' @description plots multiple UMAP's at different min.dist values ...
 #' @return plot saved to global environment
+#' @export
 plot_multi_min_dist_umap <- function(object = seu_obj, features = features, 
                                      out_name = 'min_dist_umaps'){
   plot_list <- list()
@@ -262,6 +267,7 @@ plot_multi_min_dist_umap <- function(object = seu_obj, features = features,
 #' @description plots n number features given in a list with custom colour scale ...
 #' @param featureList list of features to plot
 #' @return plot saved to global environment
+#' @export
 multi_f_plots <- function(seuratObject, featureList, ncol = 3, pt.size = 0.8) {
   plotList <- lapply(featureList, function(feature) {
     FeaturePlot(object = seuratObject, features = feature, pt.size = pt.size, reduction = "umap") +
