@@ -1,8 +1,8 @@
 # WookieTools
 
-# Version 0.1.2
+# Version 0.2
 # All input objects are Seurat Objects unless mentioned otherwise
-# @export
+#' @export
 load_libraries<- function(){
   suppressMessages(library(Matrix))
   suppressMessages(library(dplyr))
@@ -24,7 +24,6 @@ load_libraries()
 # Run Iteratively
 # change 'mt' to 'MT' depending on Mouse/Human dataset
 # Potential error with feature name, change as needed
-# @export
 #' @name wookieqc
 #' @title Seurat Object Quality Control function
 #' @description Run Iteratively for the necessary QC...
@@ -37,7 +36,8 @@ load_libraries()
 #' @param colors Colors for facetting ...
 #' @return Seurat object after quality control
 #' @export
-wookie_qc <- function(matrix, nf_min = nf_min, nf_max = nf_max, nc = nc, pmt = pmt, group = 'orig.ident', colors = NULL) {
+wookie_qc <- function(matrix, nf_min = 0, nf_max = 20000, nc = 200000, pmt = 20, group = 'orig.ident', colors = NULL) {
+  load_libraries()
   matrix[['percent.ribo']] <- PercentageFeatureSet(matrix, pattern = "^Rp[sl]")
   matrix[["percent.mt"]] <- PercentageFeatureSet(matrix, pattern = "^mt-")
   matrix <- subset(matrix, subset = nf_min < nFeature_RNA & nFeature_RNA < nf_max & nCount_RNA < nc & percent.mt < pmt)
@@ -78,7 +78,6 @@ wookie_qc <- function(matrix, nf_min = nf_min, nf_max = nf_max, nc = nc, pmt = p
 
 # Doublet finder using scds
 # Not recommended, use scrubdub (scrublet) instead
-# @export
 #' @name scds_doublets
 #' @title scds Doublet finder for Seurat
 #' @description Use not recommended ...
@@ -86,6 +85,7 @@ wookie_qc <- function(matrix, nf_min = nf_min, nf_max = nf_max, nc = nc, pmt = p
 #' @return Seurat object with doublet scores and call
 #' @export
 scds_doublets <- function(matrix){
+  load_libraries()
   print('Not recommended!, use scrubdub (Scrublet) instead')
   suppressMessages(a_matrix <- NormalizeData(matrix))
   suppressMessages(a_matrix <- FindVariableFeatures(a_matrix, selection.method = "vst", nfeatures = 3000))
@@ -121,7 +121,6 @@ scds_doublets <- function(matrix){
 }
 
 # Doublet finder using Scrublet
-# @export
 #' @name scrub_dub
 #' @title Scrublet for Seurat ...
 #' @description Run Scrublet on a Seurat Object ...
@@ -129,6 +128,7 @@ scds_doublets <- function(matrix){
 #' @return Seurat object with scrublet scores and call
 #' @export
 scrub_dub <- function(seu_obj){
+  load_libraries()
   suppressMessages(seu_obj <- NormalizeData(seu_obj))
   suppressMessages(seu_obj <- FindVariableFeatures(seu_obj, selection.method = "vst", nfeatures = 3000))
   suppressMessages(seu_obj <- ScaleData(seu_obj))
@@ -146,7 +146,6 @@ scrub_dub <- function(seu_obj){
 
 # Function to sum the counts of two matrices containing the same cells
 # Input: Count Matrices | Output: Seurat Object
-# @export
 #' @name sum_matrices
 #' @title Matrix Sum function
 #' @description Merge two count matrices, where the cells are the same, to obtain a single seurat object with the counts from two matrices summed for each cell ...
@@ -158,6 +157,7 @@ scrub_dub <- function(seu_obj){
 #' @return Summed and merged Seurat object
 #' @export
 sum_matrices <- function(matrix1, matrix2, sample = 'sample', min_cells = 3, min_features = 200) {
+  load_libraries()
   
   # Check if row names are identical
   if (!identical(rownames(matrix1), rownames(matrix2))) {
@@ -203,7 +203,6 @@ sum_matrices <- function(matrix1, matrix2, sample = 'sample', min_cells = 3, min
 
 # Function to run and plot multiple UMAP's for different numbers of a feature(Highly variable genes or Most Abundant genes)
 # Features must be obtained and given as input
-# @export
 #' @name plot_multi_feat_umap
 #' @title Plot UMAPs to test features
 #' @description plot multiple UMAP's for different numbers of a feature i.e Highly variable genes or Most Abundant genes ...
@@ -212,6 +211,7 @@ sum_matrices <- function(matrix1, matrix2, sample = 'sample', min_cells = 3, min
 plot_multi_feat_umap <- function(object = seu_obj, features = features, min.dist = 0.1, 
                                  max_features = 3000,ftype='HVG',
                                  step = 500,out_name = 'combined_umap') {
+  load_libraries()
   plot_list <- list()
   
   for (feature_length in seq(500, max_features, step)) {
@@ -234,7 +234,6 @@ plot_multi_feat_umap <- function(object = seu_obj, features = features, min.dist
 }
 
 # Function plots multiple UMAP's at different min.dist values
-# @export
 #' @name plot_multi_min_dist_umap
 #' @title Plot UMAPs to test min.dist
 #' @description plots multiple UMAP's at different min.dist values ...
@@ -242,6 +241,7 @@ plot_multi_feat_umap <- function(object = seu_obj, features = features, min.dist
 #' @export
 plot_multi_min_dist_umap <- function(object = seu_obj, features = features, 
                                      out_name = 'min_dist_umaps'){
+  load_libraries()
   plot_list <- list()
   
   for (min_dist in seq(0.1, 0.5, 0.1)) {
@@ -265,14 +265,14 @@ plot_multi_min_dist_umap <- function(object = seu_obj, features = features,
 
 # Function to plot multiple features with color map
 # Input seurat object and a list of features to plot
-# @export
 #' @name multi_f_plots
-#' @title Plot multiple features
+#' @title Plot multiple features 
 #' @description plots n number features given in a list with custom colour scale ...
-#' @param featureList list of features to plot
+#' @param featureList list of features to plot ...
 #' @return plot saved to global environment
 #' @export
 multi_f_plots <- function(seuratObject, featureList, ncol = 3, pt.size = 0.8) {
+  load_libraries()
   plotList <- lapply(featureList, function(feature) {
     FeaturePlot(object = seuratObject, features = feature, pt.size = pt.size, reduction = "umap") +
       theme(aspect.ratio = 1) +
@@ -284,3 +284,33 @@ multi_f_plots <- function(seuratObject, featureList, ncol = 3, pt.size = 0.8) {
   return(plotGrid)
 }
 
+
+
+# Function to remove particular cell types based on marker gene expression
+#' @name wookie_filter_celltypes
+#' @title wookie_filter_celltypes
+#' @description Function to remove particular cell types based on marker gene expression ...
+#' @param seurat_object object to filter
+#' @param marker_List list of marker genes of celltype to remove ...
+#' @param cutoff quantile threshold, default is 0.99
+#' @return filtered seurat object
+#' @export
+wookie_filter_celltype <- function(seurat_object,marker_list,cutoff = 0.99){
+  
+  # Transpose the expression matrix
+  expression_matrix_transposed <- t(seurat_object@assays$RNA$scale.data)
+  
+  # Calculate average normalized values for fibroblast marker genes
+  seurat_object$avg_celltype_expression <- rowMeans(expression_matrix_transposed[, marker_list, drop = FALSE])
+  
+  # Set a threshold for filtering
+  threshold <- quantile(seurat_object$avg_celltype_expression, cutoff)
+  
+  # Filter out non-epithelial cells
+  cellstokeep <- which(seurat_object$avg_celltype_expression <= threshold)
+  seu_filtered <- seurat_object[, cellstokeep]
+  cellstoremove <- which(seurat_object$avg_celltype_expression > threshold)
+  seu_removed <- seurat_object[, cellstoremove]
+  print(paste0(length(cellstokeep), ' Cells kept, ', length(cellstoremove), ' cells removed.'))
+  return(seu_filtered)
+}

@@ -7,7 +7,7 @@
 multi_f_plots(seuratObject, featureList, ncol = 3, pt.size = 0.8)
 }
 \arguments{
-\item{featureList}{list of features to plot}
+\item{featureList}{list of features to plot ...}
 }
 \value{
 plot saved to global environment

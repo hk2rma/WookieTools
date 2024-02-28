@@ -7,10 +7,10 @@
 \usage{
 wookie_qc(
   matrix,
-  nf_min = nf_min,
-  nf_max = nf_max,
-  nc = nc,
-  pmt = pmt,
+  nf_min = 0,
+  nf_max = 20000,
+  nc = 2e+05,
+  pmt = 20,
   group = "orig.ident",
   colors = NULL
 )

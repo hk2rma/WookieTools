@@ -23,9 +23,10 @@ To use WookieTools, you can install it using the following R code:
 if (!requireNamespace("devtools", quietly = TRUE)) {
   install.packages("devtools")
 }
-
-# Install WookieTools
-devtools::install_github("hk2rma/WookieTools")
+if (!requireNamespace("WookieTools", quietly = TRUE)) {
+  devtools::install_github("hk2rma/WookieTools")
+}
+library(Seurat)
 library(WookieTools)
 ```
 
@@ -39,7 +40,7 @@ Performs quality control on a Seurat object by filtering cells based on specifie
 
 Usage
 ```{r qc}
-qc(matrix, nf_min = nf_min, nf_max = nf_max, nc = nc, pmt = pmt, group = 'orig.ident', colors = NULL)
+wookie_qc(matrix, nf_min = nf_min, nf_max = nf_max, nc = nc, pmt = pmt, group = 'orig.ident', colors = NULL)
 ```
 matrix: Seurat object.
 nf_min: Minimum number of features.
