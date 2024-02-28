@@ -1,28 +1,31 @@
 # WookieTools
 
-# Version 0.1.1
+# Version 0.1.2
 # All input objects are Seurat Objects unless mentioned otherwise
 # @export
-suppressMessages(library(Matrix))
-suppressMessages(library(dplyr))
-suppressMessages(library(tidyr))
-suppressMessages(library(tidyverse))
-suppressMessages(library(scds))
-suppressMessages(library(SingleCellExperiment))
-suppressMessages(library(Seurat))
-suppressMessages(library(ggplot2))
-suppressMessages(library(plyr))
-suppressMessages(library(cowplot))
-suppressMessages(library(patchwork))
-suppressMessages(library(singleCellTK))
+load_libraries<- function(){
+  suppressMessages(library(Matrix))
+  suppressMessages(library(dplyr))
+  suppressMessages(library(tidyr))
+  suppressMessages(library(tidyverse))
+  suppressMessages(library(scds))
+  suppressMessages(library(SingleCellExperiment))
+  suppressMessages(library(Seurat))
+  suppressMessages(library(ggplot2))
+  suppressMessages(library(plyr))
+  suppressMessages(library(cowplot))
+  suppressMessages(library(patchwork))
+  suppressMessages(library(singleCellTK))
+}
 
+load_libraries()
 
 # Seurat Object Quality Control function
 # Run Iteratively
 # change 'mt' to 'MT' depending on Mouse/Human dataset
 # Potential error with feature name, change as needed
 # @export
-#' @name qc
+#' @name wookieqc
 #' @title Seurat Object Quality Control function
 #' @description Run Iteratively for the necessary QC...
 #' @param matrix Seurat object ...
@@ -34,7 +37,7 @@ suppressMessages(library(singleCellTK))
 #' @param colors Colors for facetting ...
 #' @return Seurat object after quality control
 #' @export
-qc <- function(matrix, nf_min = nf_min, nf_max = nf_max, nc = nc, pmt = pmt, group = 'orig.ident', colors = NULL) {
+wookie_qc <- function(matrix, nf_min = nf_min, nf_max = nf_max, nc = nc, pmt = pmt, group = 'orig.ident', colors = NULL) {
   matrix[['percent.ribo']] <- PercentageFeatureSet(matrix, pattern = "^Rp[sl]")
   matrix[["percent.mt"]] <- PercentageFeatureSet(matrix, pattern = "^mt-")
   matrix <- subset(matrix, subset = nf_min < nFeature_RNA & nFeature_RNA < nf_max & nCount_RNA < nc & percent.mt < pmt)
@@ -71,6 +74,7 @@ qc <- function(matrix, nf_min = nf_min, nf_max = nf_max, nc = nc, pmt = pmt, gro
   
   return(matrix)
 }
+
 
 # Doublet finder using scds
 # Not recommended, use scrubdub (scrublet) instead
