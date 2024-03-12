@@ -1,6 +1,6 @@
 # WookieTools
 
-# Version 0.2
+# Version 0.2.1
 # All input objects are Seurat Objects unless mentioned otherwise
 #' @export
 load_libraries<- function(){
@@ -297,6 +297,8 @@ multi_f_plots <- function(seuratObject, featureList, ncol = 3, pt.size = 0.8) {
 #' @export
 wookie_filter_celltype <- function(seurat_object,marker_list,cutoff = 0.99){
   
+  print('Ensure marker genes are in RNA$scale.data')
+  
   # Transpose the expression matrix
   expression_matrix_transposed <- t(seurat_object@assays$RNA$scale.data)
   
@@ -313,4 +315,57 @@ wookie_filter_celltype <- function(seurat_object,marker_list,cutoff = 0.99){
   seu_removed <- seurat_object[, cellstoremove]
   print(paste0(length(cellstokeep), ' Cells kept, ', length(cellstoremove), ' cells removed.'))
   return(seu_filtered)
+}
+
+
+
+# Function to plot qc metrics of a sparce matrix
+#' @name wookie_matrix_qc_plot
+#' @title wookie_matrix_qc_plot
+#' @description Function to to plot qc metrics of a sparce matrix ...
+#' @param count_matrix_sparse sparce matrix
+#' @param fill_color plot color, default is #589FFF ...
+#' @return qc plot
+#' @export
+wookie_matrix_qc_plot <- function(count_matrix_sparse, fill_color = "#589FFF") {
+  reads_per_cell <- Matrix::colSums(count_matrix_sparse)
+  genes_per_cell <- Matrix::colSums(count_matrix_sparse > 0)
+  reads_per_gene <- Matrix::rowSums(count_matrix_sparse > 0)
+  
+  p1 <- ggplot() +
+    geom_histogram(aes(x = log10(reads_per_cell + 1)), fill = fill_color, color = 'black', bins = 30) +
+    ggtitle('reads per cell') +
+    theme_minimal() +
+    theme(panel.border = element_rect(color = "black", fill = NA, size = 1),
+          panel.grid.major = element_blank(),
+          panel.grid.minor = element_blank())
+  
+  p2 <- ggplot() +
+    geom_histogram(aes(x = log10(genes_per_cell + 1)), fill = fill_color, color = 'black', bins = 30) +
+    ggtitle('genes per cell') +
+    theme_minimal() +
+    theme(panel.border = element_rect(color = "black", fill = NA, size = 1),
+          panel.grid.major = element_blank(),
+          panel.grid.minor = element_blank())
+  
+  p4 <- ggplot() +
+    geom_histogram(aes(x = log10(reads_per_gene + 1)), fill = fill_color, color = 'black', bins = 30) +
+    ggtitle('reads per gene') +
+    theme_minimal() +
+    theme(panel.border = element_rect(color = "black", fill = NA, size = 1),
+          panel.grid.major = element_blank(),
+          panel.grid.minor = element_blank())
+  
+  p3 <- ggplot() +
+    geom_point(aes(x = reads_per_cell, y = genes_per_cell), fill = fill_color,color='black',pch=21, shape = 16, size = 2, alpha = 1) +
+    ggtitle('Reads vs. Genes per Cell') +
+    theme_minimal() +
+    theme(panel.border = element_rect(color = "black", fill = NA, size = 1),
+          panel.grid.major = element_blank(),
+          panel.grid.minor = element_blank())
+  
+  qplot <- plot_grid(p1, p2, p3, p4, ncol = 2)
+  
+  print(qplot)
+  return(qplot)
 }
