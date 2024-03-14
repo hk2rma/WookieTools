@@ -11,6 +11,7 @@ wookie_qc(
   nf_max = 20000,
   nc = 2e+05,
   pmt = 20,
+  ptr = 100,
   group = "orig.ident",
   colors = NULL
 )
@@ -25,6 +26,8 @@ wookie_qc(
 \item{nc}{Maximum number of counts ...}
 
 \item{pmt}{Percentage of mitochondrial genes ...}
+
+\item{ptr}{Percentage of ribosomal genes ...}
 
 \item{group}{Grouping variable ...}
 

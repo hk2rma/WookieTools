@@ -4,12 +4,14 @@
 \alias{wookie_matrix_qc_plot}
 \title{wookie_matrix_qc_plot}
 \usage{
-wookie_matrix_qc_plot(count_matrix_sparse, fill_color = "#589FFF")
+wookie_matrix_qc_plot(count_matrix_sparse, fill_color = "#589FFF", title = "")
 }
 \arguments{
 \item{count_matrix_sparse}{sparce matrix}
 
 \item{fill_color}{plot color, default is #589FFF ...}
+
+\item{title}{title for the plot}
 }
 \value{
 qc plot

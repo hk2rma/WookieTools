@@ -1,6 +1,6 @@
 # WookieTools
 
-# Version 0.2.1
+# Version 0.2.2
 # All input objects are Seurat Objects unless mentioned otherwise
 #' @export
 load_libraries<- function(){
@@ -32,15 +32,16 @@ load_libraries()
 #' @param nf_max Maximum number of features ...
 #' @param nc Maximum number of counts ...
 #' @param pmt Percentage of mitochondrial genes ...
+#' @param ptr Percentage of ribosomal genes ...
 #' @param group Grouping variable ...
 #' @param colors Colors for facetting ...
 #' @return Seurat object after quality control
 #' @export
-wookie_qc <- function(matrix, nf_min = 0, nf_max = 20000, nc = 200000, pmt = 20, group = 'orig.ident', colors = NULL) {
+wookie_qc <- function(matrix, nf_min = 0, nf_max = 20000, nc = 200000, pmt = 20, ptr = 100,group = 'orig.ident', colors = NULL) {
   load_libraries()
   matrix[['percent.ribo']] <- PercentageFeatureSet(matrix, pattern = "^Rp[sl]")
   matrix[["percent.mt"]] <- PercentageFeatureSet(matrix, pattern = "^mt-")
-  matrix <- subset(matrix, subset = nf_min < nFeature_RNA & nFeature_RNA < nf_max & nCount_RNA < nc & percent.mt < pmt)
+  matrix <- subset(matrix, subset = nf_min < nFeature_RNA & nFeature_RNA < nf_max & nCount_RNA < nc & percent.mt < pmt & percent.ribo < ptr)
   options(repr.plot.width = 16, repr.plot.height = 30) 
   vl_plot <- VlnPlot(matrix, features = c("nFeature_RNA", "nCount_RNA", "percent.mt", "percent.ribo"),
                      ncol = 4)
@@ -325,9 +326,10 @@ wookie_filter_celltype <- function(seurat_object,marker_list,cutoff = 0.99){
 #' @description Function to to plot qc metrics of a sparce matrix ...
 #' @param count_matrix_sparse sparce matrix
 #' @param fill_color plot color, default is #589FFF ...
+#' @param title title for the plot
 #' @return qc plot
 #' @export
-wookie_matrix_qc_plot <- function(count_matrix_sparse, fill_color = "#589FFF") {
+wookie_matrix_qc_plot <- function(count_matrix_sparse, fill_color = "#589FFF",title="") {
   reads_per_cell <- Matrix::colSums(count_matrix_sparse)
   genes_per_cell <- Matrix::colSums(count_matrix_sparse > 0)
   reads_per_gene <- Matrix::rowSums(count_matrix_sparse > 0)
@@ -364,8 +366,8 @@ wookie_matrix_qc_plot <- function(count_matrix_sparse, fill_color = "#589FFF") {
           panel.grid.major = element_blank(),
           panel.grid.minor = element_blank())
   
-  qplot <- plot_grid(p1, p2, p3, p4, ncol = 2)
+  qplot <- plot_grid(p1, p2, p3, p4, ncol = 2) + ggtitle(title)
   
-  print(qplot)
+  
   return(qplot)
 }
