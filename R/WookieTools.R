@@ -1,6 +1,6 @@
 # WookieTools
 
-# Version 0.2.2
+# Version 0.2.3
 # All input objects are Seurat Objects unless mentioned otherwise
 #' @export
 load_libraries<- function(){
@@ -15,7 +15,6 @@ load_libraries<- function(){
   suppressMessages(library(plyr))
   suppressMessages(library(cowplot))
   suppressMessages(library(patchwork))
-  suppressMessages(library(singleCellTK))
 }
 
 load_libraries()
