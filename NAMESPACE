@@ -2,6 +2,8 @@
 
 export(load_libraries)
 export(multi_f_plots)
+export(plot_compare_normalisation)
+export(plot_gene_expression_histogram)
 export(plot_multi_feat_umap)
 export(plot_multi_min_dist_umap)
 export(scds_doublets)

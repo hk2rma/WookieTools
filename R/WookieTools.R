@@ -1,6 +1,6 @@
 # WookieTools
 
-# Version 0.2.3
+# Version 0.3
 # All input objects are Seurat Objects unless mentioned otherwise
 #' @export
 load_libraries<- function(){
@@ -369,4 +369,83 @@ wookie_matrix_qc_plot <- function(count_matrix_sparse, fill_color = "#589FFF",ti
   
   
   return(qplot)
+}
+
+# Function to compare Log Normalisation and SCT
+#' @name plot_compare_normalisation
+#' @title plot_compare_normalisation
+#' @description Function to compare Log Normalisation and SCT, Ensure Seurat Obj is SCTransformed and both scale.data contains all genes ...
+#' @param seurat_obj Seurat Object with both RNA and SCT assays
+#' @return plot
+#' @export
+plot_compare_normalisation <- function(seurat_obj) {
+  raw_counts <- colSums(GetAssayData(object = seurat_obj, layer = "counts", assay = 'RNA'))
+  normalized_counts <- colSums(seurat_obj@assays$RNA$data)
+  sctransform_counts <- colSums(seurat_obj@assays$SCT$data)
+  
+  scaled_ln <- colSums(seurat_obj@assays$RNA$scale.data)
+  scaled_sct <- colSums(seurat_obj@assays$SCT$scale.data)
+  
+  plot_data_counts <- data.frame(
+    Cell = names(raw_counts),
+    Raw_Counts = raw_counts,
+    Normalized_Counts = normalized_counts,
+    SCT_Counts = sctransform_counts,
+    Scaled_LN = scaled_ln,
+    Scaled_SCT = scaled_sct
+  )
+  
+  plot_raw <- ggplot(plot_data_counts, aes(x = Cell)) +
+    geom_bar(aes(y = Raw_Counts), stat = "identity", fill = "blue") +
+    labs(title = "Raw Counts", x = "Cell", y = "Counts") +
+    theme_minimal()
+  
+  plot_normalized <- ggplot(plot_data_counts, aes(x = Cell)) +
+    geom_bar(aes(y = Normalized_Counts), stat = "identity", fill = "red") +
+    labs(title = "Normalized Counts", x = "Cell", y = "Counts") +
+    theme_minimal()
+  
+  plot_sct <- ggplot(plot_data_counts, aes(x = Cell)) +
+    geom_bar(aes(y = SCT_Counts), stat = "identity", fill = "green") +
+    labs(title = "SCTransform Counts", x = "Cell", y = "Counts") +
+    theme_minimal()
+  
+  plot_scaled_ln <- ggplot(plot_data_counts, aes(x = Cell)) +
+    geom_bar(aes(y = Scaled_LN), stat = "identity", fill = "red") +
+    labs(title = "Scaled Data after Normalization", x = "Cell", y = "Counts") +
+    theme_minimal()
+  
+  plot_scaled_sct <- ggplot(plot_data_counts, aes(x = Cell)) +
+    geom_bar(aes(y = Scaled_SCT), stat = "identity", fill = "green") +
+    labs(title = "Scaled Data after SCTransform", x = "Cell", y = "Counts") +
+    theme_minimal()
+  
+  plot_grid(plot_raw, plot_normalized, plot_sct, plot_scaled_ln, plot_scaled_sct, ncol = 3)
+}
+
+# Function to compare Log Normalisation and SCT (Histogram)
+#' @name plot_gene_expression_histogram
+#' @title plot_gene_expression_histogram
+#' @description Function to compare Log Normalisation and SCT, Ensure Seurat Obj is SCTransformed and both scale.data contains all genes ...
+#' @param seurat_obj Seurat Object with both RNA and SCT assays
+#' @return histogram
+#' @export
+plot_gene_expression_histogram <- function(seurat_obj) {
+  expression_data_RNA <- as.vector(seurat_obj@assays$SCT$scale.data)
+  expression_data_SCT <- as.vector(seurat_obj@assays$RNA$scale.data)
+  
+  mean_expr_rna <- mean(expression_data_RNA)
+  sd_expr_rna <- sd(expression_data_RNA)
+  mean_expr_sct <- mean(expression_data_SCT)
+  sd_expr_sct <- sd(expression_data_SCT)
+  
+  par(mfrow = c(1, 2))
+  
+  hist(expression_data_RNA, breaks = 50, freq = FALSE, main = "Histogram of Gene Expression RNA", xlab = "Gene Expression", col = "lightgray")
+  curve(dnorm(x, mean = mean_expr_rna, sd = sd_expr_rna), add = TRUE, col = "blue", lwd = 2)
+  
+  hist(expression_data_SCT, breaks = 50, freq = FALSE, main = "Histogram of Gene Expression SCT", xlab = "Gene Expression", col = "lightgray")
+  curve(dnorm(x, mean = mean_expr_sct, sd = sd_expr_sct), add = TRUE, col = "blue", lwd = 2)
+  
+  par(mfrow = c(1, 1))
 }
