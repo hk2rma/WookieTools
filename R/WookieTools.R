@@ -1,6 +1,6 @@
 # WookieTools
 
-# Version 0.3
+# Version 0.3.1
 # All input objects are Seurat Objects unless mentioned otherwise
 #' @export
 load_libraries<- function(){
@@ -379,7 +379,7 @@ wookie_matrix_qc_plot <- function(count_matrix_sparse, fill_color = "#589FFF",ti
 #' @return plot
 #' @export
 plot_compare_normalisation <- function(seurat_obj) {
-  raw_counts <- colSums(GetAssayData(object = seurat_obj, layer = "counts", assay = 'RNA'))
+  raw_counts <- colSums(seurat_obj@assays$RNA$counts)
   normalized_counts <- colSums(seurat_obj@assays$RNA$data)
   sctransform_counts <- colSums(seurat_obj@assays$SCT$data)
   
