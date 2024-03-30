@@ -4,14 +4,14 @@
 \alias{plot_compare_normalisation}
 \title{plot_compare_normalisation}
 \usage{
-plot_compare_normalisation(seurat_obj)
+plot_compare_normalisation(seuratObj)
 }
 \arguments{
-\item{seurat_obj}{Seurat Object with both RNA and SCT assays}
+\item{seuratObj}{A Seurat object with both RNA and SCT assays}
 }
 \value{
-plot
+A plot comparing raw counts, normalized counts, SCTransform counts, and scaled data
 }
 \description{
-Function to compare Log Normalisation and SCT, Ensure Seurat Obj is SCTransformed and both scale.data contains all genes ...
+Function to compare different normalization methods
 }

@@ -1,6 +1,6 @@
 # WookieTools
 
-# Version 0.3.1
+# Version 0.3.2
 # All input objects are Seurat Objects unless mentioned otherwise
 #' @export
 load_libraries<- function(){
@@ -371,56 +371,48 @@ wookie_matrix_qc_plot <- function(count_matrix_sparse, fill_color = "#589FFF",ti
   return(qplot)
 }
 
-# Function to compare Log Normalisation and SCT
-#' @name plot_compare_normalisation
+
+#' Function to compare different normalization methods
 #' @title plot_compare_normalisation
-#' @description Function to compare Log Normalisation and SCT, Ensure Seurat Obj is SCTransformed and both scale.data contains all genes ...
-#' @param seurat_obj Seurat Object with both RNA and SCT assays
-#' @return plot
+#' @name plot_compare_normalisation
+#' @param seuratObj A Seurat object with both RNA and SCT assays
+#' @return A plot comparing raw counts, normalized counts, SCTransform counts, and scaled data
 #' @export
-plot_compare_normalisation <- function(seurat_obj) {
-  raw_counts <- colSums(seurat_obj@assays$RNA$counts)
-  normalized_counts <- colSums(seurat_obj@assays$RNA$data)
-  sctransform_counts <- colSums(seurat_obj@assays$SCT$data)
+plot_compare_normalisation <- function(seuratObj) {
   
-  scaled_ln <- colSums(seurat_obj@assays$RNA$scale.data)
-  scaled_sct <- colSums(seurat_obj@assays$SCT$scale.data)
+  # Extract count data
+  rc <- GetAssayData(object = seuratObj,assay = 'RNA',layer = 'counts')
+  rawCounts <- colSums(rc)
+  normalizedCounts <- colSums(seuratObj[['RNA']]@layers$data)
+  sctransformCounts <- colSums(seuratObj[['SCT']]@data)
+  scaledLN <- colSums(seuratObj[['RNA']]@layers$scale.data)
+  scaledSCT <- colSums(seuratObj[['SCT']]@scale.data)
   
-  plot_data_counts <- data.frame(
-    Cell = names(raw_counts),
-    Raw_Counts = raw_counts,
-    Normalized_Counts = normalized_counts,
-    SCT_Counts = sctransform_counts,
-    Scaled_LN = scaled_ln,
-    Scaled_SCT = scaled_sct
+  # Create a data frame for plotting
+  plotDataCounts <- data.frame(
+    Cell = names(rawCounts),
+    Raw_Counts = rawCounts,
+    Normalized_Counts = normalizedCounts,
+    SCT_Counts = sctransformCounts,
+    Scaled_LN = scaledLN,
+    Scaled_SCT = scaledSCT
   )
   
-  plot_raw <- ggplot(plot_data_counts, aes(x = Cell)) +
-    geom_bar(aes(y = Raw_Counts), stat = "identity", fill = "blue") +
-    labs(title = "Raw Counts", x = "Cell", y = "Counts") +
-    theme_minimal()
+  # Melt data for easier plotting
+  plotDataMelted <- reshape2::melt(plotDataCounts, id.vars = "Cell", variable.name = "Type", value.name = "Counts")
   
-  plot_normalized <- ggplot(plot_data_counts, aes(x = Cell)) +
-    geom_bar(aes(y = Normalized_Counts), stat = "identity", fill = "red") +
-    labs(title = "Normalized Counts", x = "Cell", y = "Counts") +
-    theme_minimal()
+  # Plot
+  plot <- ggplot(plotDataMelted, aes(x = Cell, y = Counts, fill = Type)) +
+    geom_bar(stat = "identity", position = "dodge") +
+    facet_wrap(~ Type, scales = "free_y") +
+    labs(title = "Comparison of Normalization Methods",
+         x = "Cell",
+         y = "Counts",
+         fill = "Normalization Method") +
+    theme_minimal() +
+    theme(axis.text.x = element_blank()) # Remove x-axis labels
   
-  plot_sct <- ggplot(plot_data_counts, aes(x = Cell)) +
-    geom_bar(aes(y = SCT_Counts), stat = "identity", fill = "green") +
-    labs(title = "SCTransform Counts", x = "Cell", y = "Counts") +
-    theme_minimal()
-  
-  plot_scaled_ln <- ggplot(plot_data_counts, aes(x = Cell)) +
-    geom_bar(aes(y = Scaled_LN), stat = "identity", fill = "red") +
-    labs(title = "Scaled Data after Normalization", x = "Cell", y = "Counts") +
-    theme_minimal()
-  
-  plot_scaled_sct <- ggplot(plot_data_counts, aes(x = Cell)) +
-    geom_bar(aes(y = Scaled_SCT), stat = "identity", fill = "green") +
-    labs(title = "Scaled Data after SCTransform", x = "Cell", y = "Counts") +
-    theme_minimal()
-  
-  plot_grid(plot_raw, plot_normalized, plot_sct, plot_scaled_ln, plot_scaled_sct, ncol = 3)
+  return(plot)
 }
 
 # Function to compare Log Normalisation and SCT (Histogram)
