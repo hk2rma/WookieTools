@@ -6,7 +6,8 @@
 \usage{
 plot_multi_min_dist_umap(
   object = seu_obj,
-  features = features,
+  features = NULL,
+  dims = 1:30,
   out_name = "min_dist_umaps"
 )
 }

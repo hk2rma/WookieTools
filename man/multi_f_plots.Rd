@@ -4,7 +4,13 @@
 \alias{multi_f_plots}
 \title{Plot multiple features}
 \usage{
-multi_f_plots(seuratObject, featureList, ncol = 3, pt.size = 0.8)
+multi_f_plots(
+  seuratObject,
+  featureList,
+  ncol = 3,
+  pt.size = 0.8,
+  split_by = NULL
+)
 }
 \arguments{
 \item{featureList}{list of features to plot ...}

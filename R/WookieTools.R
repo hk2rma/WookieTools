@@ -239,7 +239,7 @@ plot_multi_feat_umap <- function(object = seu_obj, features = features, min.dist
 #' @description plots multiple UMAP's at different min.dist values ...
 #' @return plot saved to global environment
 #' @export
-plot_multi_min_dist_umap <- function(object = seu_obj, features = features, 
+plot_multi_min_dist_umap <- function(object = seu_obj, features = NULL, dims = 1:30, 
                                      out_name = 'min_dist_umaps'){
   load_libraries()
   plot_list <- list()
@@ -247,7 +247,7 @@ plot_multi_min_dist_umap <- function(object = seu_obj, features = features,
   for (min_dist in seq(0.1, 0.5, 0.1)) {
     current_md <- min_dist
     cat(paste0('Calculating UMAP at min.dist:',current_md))
-    current_umap <- RunUMAP(object, features = features, min.dist = current_md)
+    current_umap <- RunUMAP(object, features = features, dims = dims ,min.dist = current_md)
     current_plot <- DimPlot(current_umap, reduction = 'umap') + ggtitle(paste('UMAP: min.dist:', current_md))
     plot_list[[length(plot_list) + 1]] <- current_plot
     cat(paste0('UMAP done at min.dist:',current_md))
@@ -271,10 +271,10 @@ plot_multi_min_dist_umap <- function(object = seu_obj, features = features,
 #' @param featureList list of features to plot ...
 #' @return plot saved to global environment
 #' @export
-multi_f_plots <- function(seuratObject, featureList, ncol = 3, pt.size = 0.8) {
+multi_f_plots <- function(seuratObject, featureList, ncol = 3, pt.size = 0.8,split_by = NULL) {
   load_libraries()
   plotList <- lapply(featureList, function(feature) {
-    FeaturePlot(object = seuratObject, features = feature, pt.size = pt.size, reduction = "umap") +
+    FeaturePlot(object = seuratObject, features = feature, pt.size = pt.size, reduction = "umap",split.by = split_by) +
       theme(aspect.ratio = 1) +
       scale_color_gradientn(colours = c("#DCDCDC", "yellow", "orange", "red", "#8b0000"))
   })
