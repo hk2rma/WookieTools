@@ -11,9 +11,10 @@ wookie_qc(
   nf_max = 20000,
   nc = 2e+05,
   pmt = 20,
-  ptr = 100,
+  ptr = NULL,
   group = "orig.ident",
-  colors = NULL
+  colors = NULL,
+  species = "Mouse"
 )
 }
 \arguments{
@@ -32,6 +33,8 @@ wookie_qc(
 \item{group}{Grouping variable ...}
 
 \item{colors}{Colors for facetting ...}
+
+\item{species}{species in dataset Mouse or Human only ...}
 }
 \value{
 Seurat object after quality control

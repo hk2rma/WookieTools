@@ -33,47 +33,58 @@ load_libraries()
 #' @param pmt Percentage of mitochondrial genes ...
 #' @param ptr Percentage of ribosomal genes ...
 #' @param group Grouping variable ...
+#' @param species species in dataset Mouse or Human only ...
 #' @param colors Colors for facetting ...
 #' @return Seurat object after quality control
 #' @export
-wookie_qc <- function(matrix, nf_min = 0, nf_max = 20000, nc = 200000, pmt = 20, ptr = 100,group = 'orig.ident', colors = NULL) {
+wookie_qc <- function(matrix, nf_min = 0, nf_max = 20000, nc = 200000, pmt = 20, ptr = NULL, group = 'orig.ident', colors = NULL, species = 'Mouse'){
+  # Load necessary libraries
   load_libraries()
-  matrix[['percent.ribo']] <- PercentageFeatureSet(matrix, pattern = "^Rp[sl]")
-  matrix[["percent.mt"]] <- PercentageFeatureSet(matrix, pattern = "^mt-")
-  matrix <- subset(matrix, subset = nf_min < nFeature_RNA & nFeature_RNA < nf_max & nCount_RNA < nc & percent.mt < pmt & percent.ribo < ptr)
-  options(repr.plot.width = 16, repr.plot.height = 30) 
-  vl_plot <- VlnPlot(matrix, features = c("nFeature_RNA", "nCount_RNA", "percent.mt", "percent.ribo"),
-                     ncol = 4)
-  options(repr.plot.width = 16, repr.plot.height = 35)
-  g <- FeatureScatter(matrix,
-                      feature1 = "nCount_RNA",
-                      feature2 = "nFeature_RNA",
-                      group.by = group, shape = 1) + ggtitle('nCount_vs_nFeature') +
-    geom_point(shape = 1, alpha = 0.3)
   
-  plot2 <- FeatureScatter(matrix,
-                          feature1 = "percent.mt",
-                          feature2 = "nFeature_RNA") + ggtitle('percent.mt_vs_nFeature') +
-    geom_point(shape = 1, alpha = 0.3) + facet_wrap(~colors)
+  # Determine the mitochondrial gene pattern based on species
+  mt_pattern <- if(species == 'Mouse') "^mt-" else "^MT-"
   
-  plot3 <- FeatureScatter(matrix,
-                          feature1 = "percent.ribo",
-                          feature2 = "nFeature_RNA") + ggtitle('percent.ribo_vs_nFeature') +
-    geom_point(shape = 1, alpha = 0.3) + facet_wrap(~colors)
+  # Calculate mitochondrial and ribosomal percentages if specified
+  matrix[['percent.mt']] <- PercentageFeatureSet(matrix, pattern = mt_pattern)
+  if (!is.null(ptr)) {
+    matrix[['percent.ribo']] <- PercentageFeatureSet(matrix, pattern = "^Rp[sl]")
+  }
   
-  plot4 <- FeatureScatter(matrix,
-                          feature1 = "percent.mt",
-                          feature2 = "percent.ribo") + ggtitle('percent.mt_vs_percent.ribo') +
-    geom_point(shape = 1, alpha = 0.3) + facet_wrap(~colors)
+  # Subset the matrix based on QC metrics
+  subset_criteria <- paste0(nf_min, " < nFeature_RNA & nFeature_RNA < ", nf_max, 
+                            " & nCount_RNA < ", nc, " & percent.mt < ", pmt,
+                            if (!is.null(ptr)) paste0(" & percent.ribo < ", ptr) else "")
+  matrix <- subset(matrix, subset = eval(parse(text = subset_criteria)))
+  
+  # Visualizations
+  vl_plot <- VlnPlot(matrix, features = c("nFeature_RNA", "nCount_RNA", "percent.mt", if (!is.null(ptr)) "percent.ribo"), ncol = 4)
+  
+  plot1 <- FeatureScatter(matrix, feature1 = "nCount_RNA", feature2 = "nFeature_RNA", group.by = group) + 
+    ggtitle('nCount_vs_nFeature') + geom_point(shape = 1, alpha = 0.3)
+  
+  plot2 <- FeatureScatter(matrix, feature1 = "percent.mt", feature2 = "nFeature_RNA") + 
+    ggtitle('percent.mt_vs_nFeature') + geom_point(shape = 1, alpha = 0.3) + facet_wrap(~colors)
+  
+  plot3 <- if (!is.null(ptr)) {
+    FeatureScatter(matrix, feature1 = "percent.ribo", feature2 = "nFeature_RNA") + 
+      ggtitle('percent.ribo_vs_nFeature') + geom_point(shape = 1, alpha = 0.3) + facet_wrap(~colors)
+  }
+  
+  plot4 <- if (!is.null(ptr)) {
+    FeatureScatter(matrix, feature1 = "percent.mt", feature2 = "percent.ribo") + 
+      ggtitle('percent.mt_vs_percent.ribo') + geom_point(shape = 1, alpha = 0.3) + facet_wrap(~colors)
+  }
   
   # Combine all plots into a single plot
-  c_plot<- plot_grid(g, plot2, plot3, plot4, ncol = 2,label_size = 10)
-  combined_plot<-  plot_grid(vl_plot,c_plot,ncol = 1,nrow = 2,rel_widths = c(2,1))
+  combined_plot <- plot_grid(vl_plot, plot1, plot2, if (!is.null(plot3)) plot3, if (!is.null(plot4)) plot4, ncol = 2, label_size = 10, align = 'v')
+  plot_grid(combined_plot, ncol = 1, rel_heights = c(2, 3))
+  
   # Display the combined plot
   print(combined_plot)
   
   return(matrix)
 }
+
 
 
 # Doublet finder using scds
