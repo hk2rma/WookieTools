@@ -1,6 +1,6 @@
 # WookieTools
 
-# Version 0.3.2
+# Version 0.3.5
 # All input objects are Seurat Objects unless mentioned otherwise
 #' @export
 load_libraries<- function(){
@@ -451,4 +451,29 @@ plot_gene_expression_histogram <- function(seurat_obj) {
   curve(dnorm(x, mean = mean_expr_sct, sd = sd_expr_sct), add = TRUE, col = "blue", lwd = 2)
   
   par(mfrow = c(1, 1))
+}
+
+# Function to get optimal number of PC's
+#' @name get_optimal_pcs
+#' @title get_optimal_pcs
+#' @description Function to get the optimal number of principal components to use ...
+#' @param seurat_obj Seurat Object
+#' @return number of PC's to use
+#' @export
+get_optimal_pcs <- function(seurat_object,reduction = 'pca'){
+  #calculates the percentage of the standard deviation explained by each principal component (PC)
+  pct <- seurat_object[[reduction]]@stdev / sum(seurat_object[[reduction]]@stdev) * 100
+  #calculates the cumulative sum of the percentages calculated in the previous step
+  cumu <- cumsum(pct)
+  
+  #finds the first PC that meets two conditions: (a) the cumulative sum of the percentages up to that PC exceeds 90%, and (b) the individual percentage explained by that PC is less than 5%. The index of this PC is stored in col
+  col <- which(cumu > 90 & pct < 5)[1]
+  
+  #finds the index of the PC where the difference between its percentage and the next PC's percentage is greater than 0.1. It sorts the indices of such PCs in descending order and takes the first one ([1]). Then, it adds 1 to the index to account for the fact that R uses 1-based indexing.
+  co2 <- sort(which((pct[1:length(pct) - 1] - pct[2:length(pct)]) > 0.1),
+              decreasing = T)[1] + 1
+  
+  #selects the smaller of the two indices obtained in steps 4 and 5, and assigns it to the variable pcs.
+  pcs <- min(col,co2)
+  return(pcs)
 }
