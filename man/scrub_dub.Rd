@@ -4,10 +4,12 @@
 \alias{scrub_dub}
 \title{Scrublet for Seurat ...}
 \usage{
-scrub_dub(seu_obj)
+scrub_dub(seu_obj, preprocess = FALSE)
 }
 \arguments{
 \item{seu_obj}{Seurat object ...}
+
+\item{preprocess}{specify if the object has been preprocces and runPCA was done  ...}
 }
 \value{
 Seurat object with scrublet scores and call

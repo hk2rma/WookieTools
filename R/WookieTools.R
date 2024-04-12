@@ -1,20 +1,35 @@
 # WookieTools
 
-# Version 0.3.5
+# Version 0.4
 # All input objects are Seurat Objects unless mentioned otherwise
 #' @export
-load_libraries<- function(){
-  suppressMessages(library(Matrix))
-  suppressMessages(library(dplyr))
-  suppressMessages(library(tidyr))
-  suppressMessages(library(tidyverse))
-  suppressMessages(library(scds))
-  suppressMessages(library(SingleCellExperiment))
-  suppressMessages(library(Seurat))
-  suppressMessages(library(ggplot2))
-  suppressMessages(library(plyr))
-  suppressMessages(library(cowplot))
-  suppressMessages(library(patchwork))
+load_libraries <- function() {
+  required_packages_cran <- c("Matrix", "dplyr", "tidyr", "tidyverse", "SingleCellExperiment", "Seurat", "ggplot2", "plyr", "cowplot", "patchwork")
+  required_packages_bioc <- c("scds")
+  
+  installed_packages_cran <- rownames(installed.packages())
+  installed_packages_bioc <- rownames(utils::installed.packages("BiocManager"))
+  
+  # Install CRAN packages if not installed
+  for (package in required_packages_cran) {
+    if (!(package %in% installed_packages_cran)) {
+      install.packages(package)
+    }
+  }
+  
+  # Install Bioconductor packages if not installed
+  if (!"BiocManager" %in% installed_packages_cran) {
+    install.packages("BiocManager")
+  }
+  library(BiocManager)
+  for (package in required_packages_bioc) {
+    if (!(package %in% installed_packages_bioc)) {
+      BiocManager::install(package)
+    }
+  }
+  
+  # Load all required packages
+  invisible(lapply(c(required_packages_cran, required_packages_bioc), library, character.only = TRUE))
 }
 
 load_libraries()
@@ -37,54 +52,69 @@ load_libraries()
 #' @param colors Colors for facetting ...
 #' @return Seurat object after quality control
 #' @export
-wookie_qc <- function(matrix, nf_min = 0, nf_max = 20000, nc = 200000, pmt = 20, ptr = NULL, group = 'orig.ident', colors = NULL, species = 'Mouse'){
-  # Load necessary libraries
-  load_libraries()
+wookie_qc <- function(matrix, nf_min = 0, nf_max = 20000, nc = 200000, pmt = 20, ptr = NULL, group = 'orig.ident', colors = NULL, species = 'Mouse') {
+  
+  # Load required packages
+  required_packages <- c("Seurat", "ggplot2", "cowplot", "patchwork")
+  for (package in required_packages) {
+    if (!require(package, character.only = TRUE)) {
+      install.packages(package)
+      library(package, character.only = TRUE)
+    }
+  }
+  
+  # Input validation
+  if (!inherits(matrix, "Seurat")) {
+    stop("The 'matrix' parameter must be a valid Seurat object.")
+  }
   
   # Determine the mitochondrial gene pattern based on species
-  mt_pattern <- if(species == 'Mouse') "^mt-" else "^MT-"
+  mt_pattern <- ifelse(species == 'Mouse', "^mt-", "^MT-")
   
   # Calculate mitochondrial and ribosomal percentages if specified
-  matrix[['percent.mt']] <- PercentageFeatureSet(matrix, pattern = mt_pattern)
+  matrix <- Seurat::AddMetaData(matrix, Seurat::PercentageFeatureSet(matrix, pattern = mt_pattern), "percent.mt")
+  
   if (!is.null(ptr)) {
-    matrix[['percent.ribo']] <- PercentageFeatureSet(matrix, pattern = "^Rp[sl]")
+    matrix <- Seurat::AddMetaData(matrix, Seurat::PercentageFeatureSet(matrix, pattern = "^Rp[sl]"), "percent.ribo")
   }
   
   # Subset the matrix based on QC metrics
-  subset_criteria <- paste0(nf_min, " < nFeature_RNA & nFeature_RNA < ", nf_max, 
-                            " & nCount_RNA < ", nc, " & percent.mt < ", pmt,
-                            if (!is.null(ptr)) paste0(" & percent.ribo < ", ptr) else "")
-  matrix <- subset(matrix, subset = eval(parse(text = subset_criteria)))
+  subset_criteria <- nFeature_RNA >= nf_min & nFeature_RNA <= nf_max & nCount_RNA <= nc & matrix@meta.data$percent.mt <= pmt
   
-  # Visualizations
-  vl_plot <- VlnPlot(matrix, features = c("nFeature_RNA", "nCount_RNA", "percent.mt", if (!is.null(ptr)) "percent.ribo"), ncol = 4)
-  
-  plot1 <- FeatureScatter(matrix, feature1 = "nCount_RNA", feature2 = "nFeature_RNA", group.by = group) + 
-    ggtitle('nCount_vs_nFeature') + geom_point(shape = 1, alpha = 0.3)
-  
-  plot2 <- FeatureScatter(matrix, feature1 = "percent.mt", feature2 = "nFeature_RNA") + 
-    ggtitle('percent.mt_vs_nFeature') + geom_point(shape = 1, alpha = 0.3) + facet_wrap(~colors)
-  
-  plot3 <- if (!is.null(ptr)) {
-    FeatureScatter(matrix, feature1 = "percent.ribo", feature2 = "nFeature_RNA") + 
-      ggtitle('percent.ribo_vs_nFeature') + geom_point(shape = 1, alpha = 0.3) + facet_wrap(~colors)
+  if (!is.null(ptr)) {
+    subset_criteria <- subset_criteria & matrix@meta.data$percent.ribo <= ptr
   }
   
-  plot4 <- if (!is.null(ptr)) {
-    FeatureScatter(matrix, feature1 = "percent.mt", feature2 = "percent.ribo") + 
-      ggtitle('percent.mt_vs_percent.ribo') + geom_point(shape = 1, alpha = 0.3) + facet_wrap(~colors)
+  matrix <- matrix[, subset_criteria]
+  
+  # Visualizations
+  vl_plot <- ggplot2::VlnPlot(matrix, features = c("nFeature_RNA", "nCount_RNA", "percent.mt", if (!is.null(ptr)) "percent.ribo"), ncol = 4)
+  
+  plot1 <- Seurat::FeatureScatter(matrix, feature1 = "nCount_RNA", feature2 = "nFeature_RNA", group.by = group) +
+    ggplot2::ggtitle('nCount_vs_nFeature') +
+    ggplot2::geom_point(shape = 1, alpha = 0.3)
+  
+  plot2 <- Seurat::FeatureScatter(matrix, feature1 = "percent.mt", feature2 = "nFeature_RNA") +
+    ggplot2::ggtitle('percent.mt_vs_nFeature') +
+    ggplot2::geom_point(shape = 1, alpha = 0.3) +
+    ggplot2::facet_wrap(~colors)
+  
+  if (!is.null(ptr)) {
+    plot3 <- Seurat::FeatureScatter(matrix, feature1 = "percent.ribo", feature2 = "nFeature_RNA") +
+      ggplot2::ggtitle('percent.ribo_vs_nFeature') +
+      ggplot2::geom_point(shape = 1, alpha = 0.3) +
+      ggplot2::facet_wrap(~colors)
   }
   
   # Combine all plots into a single plot
-  combined_plot <- plot_grid(vl_plot, plot1, plot2, if (!is.null(plot3)) plot3, if (!is.null(plot4)) plot4, ncol = 2, label_size = 10, align = 'v')
-  plot_grid(combined_plot, ncol = 1, rel_heights = c(2, 3))
+  combined_plot <- cowplot::plot_grid(vl_plot, plot1, plot2, if (!is.null(ptr)) plot3, ncol = 2, label_size = 10, align = 'v')
+  combined_plot <- cowplot::plot_grid(combined_plot, ncol = 1, rel_heights = c(2, 3))
   
   # Display the combined plot
   print(combined_plot)
   
   return(matrix)
 }
-
 
 
 # Doublet finder using scds
@@ -136,22 +166,55 @@ scds_doublets <- function(matrix){
 #' @title Scrublet for Seurat ...
 #' @description Run Scrublet on a Seurat Object ...
 #' @param seu_obj Seurat object ...
+#' @param preprocess specify if the object has been preprocces and runPCA was done  ...
 #' @return Seurat object with scrublet scores and call
 #' @export
-scrub_dub <- function(seu_obj){
-  load_libraries()
-  suppressMessages(seu_obj <- NormalizeData(seu_obj))
-  suppressMessages(seu_obj <- FindVariableFeatures(seu_obj, selection.method = "vst", nfeatures = 3000))
-  suppressMessages(seu_obj <- ScaleData(seu_obj))
-  suppressMessages(seu_obj <- RunPCA(seu_obj))
+scrub_dub <- function(seu_obj, preprocess = FALSE) {
+  # Load required packages
+  required_packages <- c("Seurat", "SingleCellExperiment", "singleCellTK")
+  for (package in required_packages) {
+    if (!require(package, character.only = TRUE)) {
+      install.packages(package)
+      library(package, character.only = TRUE)
+    }
+  }
+  
+  # Input validation
+  if (!inherits(seu_obj, "Seurat")) {
+    stop("The 'seu_obj' parameter must be a valid Seurat object.")
+  }
+  
+  # Preprocess the Seurat object if required
+  if (preprocess) {
+    message("Preprocessing the Seurat object...")
+    seu_obj <- Seurat::NormalizeData(seu_obj)
+    seu_obj <- Seurat::FindVariableFeatures(seu_obj)
+    seu_obj <- Seurat::ScaleData(seu_obj)
+    seu_obj <- Seurat::RunPCA(seu_obj)
+  }
+  
+  # Convert Seurat object to SingleCellExperiment
+  message("Running Scrublet...")
   sce_obj <- as.SingleCellExperiment(seu_obj)
-  sce_scrub <- runScrublet(sce_obj)
+  
+  # Run Scrublet
+  sce_scrub <- singleCellTK::runScrublet(sce_obj)
+  
+  # Convert SingleCellExperiment back to Seurat
   seu_obj_scrubbed <- as.Seurat(sce_scrub)
+  
+  # Extract Scrublet scores and cell type calls
   scrub_scores <- seu_obj_scrubbed@meta.data$scrublet_score
   scrub_type <- seu_obj_scrubbed@meta.data$scrublet_call
-  seu_obj@meta.data$scrublet_score = scrub_scores
-  seu_obj@meta.data$scrublet_call = scrub_type
-  hist(scrub_scores)
+  
+  # Add Scrublet scores and cell type calls to the original Seurat object
+  message("Adding Scrublet results to the Seurat object...")
+  seu_obj@meta.data$scrublet_score <- scrub_scores
+  seu_obj@meta.data$scrublet_call <- scrub_type
+  
+  # Plot histogram of Scrublet scores
+  hist(scrub_scores, main = "Histogram of Scrublet Scores", xlab = "Scrublet Score")
+  
   return(seu_obj)
 }
 
