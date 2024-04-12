@@ -1,6 +1,6 @@
 # WookieTools
 
-# Version 0.4
+# Version 0.4.1
 # All input objects are Seurat Objects unless mentioned otherwise
 #' @export
 load_libraries <- function() {
@@ -50,18 +50,19 @@ load_libraries()
 #' @param group Grouping variable ...
 #' @param species species in dataset Mouse or Human only ...
 #' @param colors Colors for facetting ...
+#' @param pt.size data points in violin plot
 #' @return Seurat object after quality control
 #' @export
-wookie_qc <- function(matrix, nf_min = 0, nf_max = 20000, nc = 200000, pmt = 20, ptr = NULL, group = 'orig.ident', colors = NULL, species = 'Mouse') {
+wookie_qc <- function(matrix, nf_min = 0, nf_max = 20000, nc = 200000, pmt = 20,
+                      ptr = NULL, group = 'orig.ident', colors = NULL, species = 'Mouse', pt.size = NULL) {
   
   # Load required packages
   required_packages <- c("Seurat", "ggplot2", "cowplot", "patchwork")
-  for (package in required_packages) {
-    if (!require(package, character.only = TRUE)) {
-      install.packages(package)
-      library(package, character.only = TRUE)
-    }
+  missing_packages <- required_packages[!required_packages %in% installed.packages()[,"Package"]]
+  if (length(missing_packages) > 0) {
+    install.packages(missing_packages)
   }
+  lapply(required_packages, library, character.only = TRUE)
   
   # Input validation
   if (!inherits(matrix, "Seurat")) {
@@ -71,44 +72,37 @@ wookie_qc <- function(matrix, nf_min = 0, nf_max = 20000, nc = 200000, pmt = 20,
   # Determine the mitochondrial gene pattern based on species
   mt_pattern <- ifelse(species == 'Mouse', "^mt-", "^MT-")
   
-  # Calculate mitochondrial and ribosomal percentages if specified
-  matrix <- Seurat::AddMetaData(matrix, Seurat::PercentageFeatureSet(matrix, pattern = mt_pattern), "percent.mt")
-  
+  # Calculate mitochondrial and ribosomal percentages
+  matrix <- Seurat::AddMetaData(matrix, list(percent.mt = PercentageFeatureSet(matrix, pattern = mt_pattern)))
   if (!is.null(ptr)) {
-    matrix <- Seurat::AddMetaData(matrix, Seurat::PercentageFeatureSet(matrix, pattern = "^Rp[sl]"), "percent.ribo")
+    matrix <- Seurat::AddMetaData(matrix, list(percent.ribo = PercentageFeatureSet(matrix, pattern = "^Rp[sl]")))
   }
   
   # Subset the matrix based on QC metrics
-  subset_criteria <- nFeature_RNA >= nf_min & nFeature_RNA <= nf_max & nCount_RNA <= nc & matrix@meta.data$percent.mt <= pmt
-  
+  subset_criteria <- matrix@meta.data$nFeature_RNA > nf_min & matrix@meta.data$nFeature_RNA < nf_max & matrix@meta.data$nCount_RNA < nc & matrix@meta.data$percent.mt < pmt
   if (!is.null(ptr)) {
-    subset_criteria <- subset_criteria & matrix@meta.data$percent.ribo <= ptr
+    subset_criteria <- subset_criteria & matrix@meta.data$percent.ribo < ptr
   }
-  
   matrix <- matrix[, subset_criteria]
   
+  # Check if any cells remain after subsetting
+  if (ncol(matrix) == 0) {
+    stop("No cells meet the quality control criteria.")
+  }
+  
   # Visualizations
-  vl_plot <- ggplot2::VlnPlot(matrix, features = c("nFeature_RNA", "nCount_RNA", "percent.mt", if (!is.null(ptr)) "percent.ribo"), ncol = 4)
+  vl_plot <- VlnPlot(matrix, features = c("nFeature_RNA", "nCount_RNA", "percent.mt", if (!is.null(ptr)) "percent.ribo"), ncol = 4, pt.size = pt.size)
+  plot1 <- FeatureScatter(matrix, feature1 = "nCount_RNA", feature2 = "nFeature_RNA", group.by = group)
+  plot2 <- FeatureScatter(matrix, feature1 = "percent.mt", feature2 = "nFeature_RNA")
   
-  plot1 <- Seurat::FeatureScatter(matrix, feature1 = "nCount_RNA", feature2 = "nFeature_RNA", group.by = group) +
-    ggplot2::ggtitle('nCount_vs_nFeature') +
-    ggplot2::geom_point(shape = 1, alpha = 0.3)
-  
-  plot2 <- Seurat::FeatureScatter(matrix, feature1 = "percent.mt", feature2 = "nFeature_RNA") +
-    ggplot2::ggtitle('percent.mt_vs_nFeature') +
-    ggplot2::geom_point(shape = 1, alpha = 0.3) +
-    ggplot2::facet_wrap(~colors)
-  
+  plots_list <- list(vl_plot, plot1, plot2)
   if (!is.null(ptr)) {
-    plot3 <- Seurat::FeatureScatter(matrix, feature1 = "percent.ribo", feature2 = "nFeature_RNA") +
-      ggplot2::ggtitle('percent.ribo_vs_nFeature') +
-      ggplot2::geom_point(shape = 1, alpha = 0.3) +
-      ggplot2::facet_wrap(~colors)
+    plot3 <- FeatureScatter(matrix, feature1 = "percent.ribo", feature2 = "nFeature_RNA")
+    plots_list <- c(plots_list, list(plot3))
   }
   
   # Combine all plots into a single plot
-  combined_plot <- cowplot::plot_grid(vl_plot, plot1, plot2, if (!is.null(ptr)) plot3, ncol = 2, label_size = 10, align = 'v')
-  combined_plot <- cowplot::plot_grid(combined_plot, ncol = 1, rel_heights = c(2, 3))
+  combined_plot <- cowplot::plot_grid(plotlist = plots_list, ncol = 2, align = 'v')
   
   # Display the combined plot
   print(combined_plot)

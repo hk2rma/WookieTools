@@ -14,7 +14,8 @@ wookie_qc(
   ptr = NULL,
   group = "orig.ident",
   colors = NULL,
-  species = "Mouse"
+  species = "Mouse",
+  pt.size = NULL
 )
 }
 \arguments{
@@ -35,6 +36,8 @@ wookie_qc(
 \item{colors}{Colors for facetting ...}
 
 \item{species}{species in dataset Mouse or Human only ...}
+
+\item{pt.size}{data points in violin plot}
 }
 \value{
 Seurat object after quality control
