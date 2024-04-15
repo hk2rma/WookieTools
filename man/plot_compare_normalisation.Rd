@@ -2,16 +2,16 @@
 % Please edit documentation in R/WookieTools.R
 \name{plot_compare_normalisation}
 \alias{plot_compare_normalisation}
-\title{plot_compare_normalisation}
+\title{Compare Normalization Methods}
 \usage{
-plot_compare_normalisation(seuratObj)
+plot_compare_normalisation(seurat_obj)
 }
 \arguments{
-\item{seuratObj}{A Seurat object with both RNA and SCT assays}
+\item{seurat_obj}{A Seurat object with both RNA and SCT assays}
 }
 \value{
-A plot comparing raw counts, normalized counts, SCTransform counts, and scaled data
+A plot comparing different normalization methods
 }
 \description{
-Function to compare different normalization methods
+Compare raw counts, normalized counts, SCTransform counts, and scaled data
 }

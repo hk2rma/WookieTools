@@ -2,18 +2,27 @@
 % Please edit documentation in R/WookieTools.R
 \name{plot_multi_min_dist_umap}
 \alias{plot_multi_min_dist_umap}
-\title{Plot UMAPs to test min.dist}
+\title{Plot UMAPs for various min.dist values}
 \usage{
 plot_multi_min_dist_umap(
-  object = seu_obj,
+  seurat_obj,
   features = NULL,
   dims = 1:30,
   out_name = "min_dist_umaps"
 )
 }
+\arguments{
+\item{seurat_obj}{Seurat object}
+
+\item{features}{Features to use for UMAP}
+
+\item{dims}{Dimensions to use for UMAP}
+
+\item{out_name}{Name to assign to the combined plot}
+}
 \value{
-plot saved to global environment
+Combined UMAP plot
 }
 \description{
-plots multiple UMAP's at different min.dist values ...
+Plot UMAPs for different min.dist values
 }

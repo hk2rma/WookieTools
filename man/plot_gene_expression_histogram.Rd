@@ -2,7 +2,7 @@
 % Please edit documentation in R/WookieTools.R
 \name{plot_gene_expression_histogram}
 \alias{plot_gene_expression_histogram}
-\title{plot_gene_expression_histogram}
+\title{Compare Log Normalisation and SCT (Histogram)}
 \usage{
 plot_gene_expression_histogram(seurat_obj)
 }
@@ -10,8 +10,8 @@ plot_gene_expression_histogram(seurat_obj)
 \item{seurat_obj}{Seurat Object with both RNA and SCT assays}
 }
 \value{
-histogram
+Histogram comparing Log Normalisation and SCT
 }
 \description{
-Function to compare Log Normalisation and SCT, Ensure Seurat Obj is SCTransformed and both scale.data contains all genes ...
+Compare Log Normalisation and SCT
 }

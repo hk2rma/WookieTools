@@ -2,16 +2,18 @@
 % Please edit documentation in R/WookieTools.R
 \name{get_optimal_pcs}
 \alias{get_optimal_pcs}
-\title{get_optimal_pcs}
+\title{Get Optimal Number of PCs}
 \usage{
-get_optimal_pcs(seurat_object, reduction = "pca")
+get_optimal_pcs(seurat_obj, reduction = "pca")
 }
 \arguments{
 \item{seurat_obj}{Seurat Object}
+
+\item{reduction}{Type of reduction (e.g., 'pca')}
 }
 \value{
-number of PC's to use
+Number of PCs to use
 }
 \description{
-Function to get the optimal number of principal components to use ...
+Get the optimal number of principal components to use
 }

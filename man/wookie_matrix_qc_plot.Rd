@@ -2,20 +2,20 @@
 % Please edit documentation in R/WookieTools.R
 \name{wookie_matrix_qc_plot}
 \alias{wookie_matrix_qc_plot}
-\title{wookie_matrix_qc_plot}
+\title{Plot QC metrics of a sparse matrix}
 \usage{
 wookie_matrix_qc_plot(count_matrix_sparse, fill_color = "#589FFF", title = "")
 }
 \arguments{
-\item{count_matrix_sparse}{sparce matrix}
+\item{count_matrix_sparse}{Sparse matrix}
 
-\item{fill_color}{plot color, default is #589FFF ...}
+\item{fill_color}{Plot color (default: #589FFF)}
 
-\item{title}{title for the plot}
+\item{title}{Title for the plot}
 }
 \value{
-qc plot
+QC plot
 }
 \description{
-Function to to plot qc metrics of a sparce matrix ...
+Plot QC metrics of a sparse matrix
 }

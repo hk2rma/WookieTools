@@ -2,11 +2,11 @@
 % Please edit documentation in R/WookieTools.R
 \name{plot_multi_feat_umap}
 \alias{plot_multi_feat_umap}
-\title{Plot UMAPs to test features}
+\title{Plot UMAPs for various feature sets}
 \usage{
 plot_multi_feat_umap(
-  object = seu_obj,
-  features = features,
+  seurat_obj,
+  features,
   min.dist = 0.1,
   max_features = 3000,
   ftype = "HVG",
@@ -14,9 +14,24 @@ plot_multi_feat_umap(
   out_name = "combined_umap"
 )
 }
+\arguments{
+\item{seurat_obj}{Seurat object}
+
+\item{features}{List of features to use}
+
+\item{min.dist}{Minimum distance parameter for UMAP}
+
+\item{max_features}{Maximum number of features to consider}
+
+\item{ftype}{Type of features (e.g., 'HVG')}
+
+\item{step}{Step size for incrementing feature sets}
+
+\item{out_name}{Name to assign to the combined plot}
+}
 \value{
-plot saved to global environment
+Combined UMAP plot
 }
 \description{
-plot multiple UMAP's for different numbers of a feature i.e Highly variable genes or Most Abundant genes ...
+Plot UMAPs for different numbers of features (e.g., Highly Variable Genes or Most Abundant Genes)
 }

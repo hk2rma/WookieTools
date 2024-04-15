@@ -2,22 +2,30 @@
 % Please edit documentation in R/WookieTools.R
 \name{multi_f_plots}
 \alias{multi_f_plots}
-\title{Plot multiple features}
+\title{Plot multiple features with color map}
 \usage{
 multi_f_plots(
-  seuratObject,
-  featureList,
+  seurat_obj,
+  feature_list,
   ncol = 3,
   pt.size = 0.8,
   split_by = NULL
 )
 }
 \arguments{
-\item{featureList}{list of features to plot ...}
+\item{seurat_obj}{Seurat object}
+
+\item{feature_list}{List of features to plot}
+
+\item{ncol}{Number of columns for arrangement}
+
+\item{pt.size}{Point size for plotting}
+
+\item{split_by}{Variable for splitting}
 }
 \value{
-plot saved to global environment
+Plot grid
 }
 \description{
-plots n number features given in a list with custom colour scale ...
+Plot multiple features with custom color scale
 }
