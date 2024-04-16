@@ -1,4 +1,4 @@
-# WookieTools - Version 0.5
+# WookieTools - Version 0.5.1
 
 # Install and load necessary packages safely
 ensure_packages <- function(required_packages) {
@@ -37,9 +37,30 @@ load_libraries <- function() {
 
 load_libraries()
 
-# Quality Control function for Seurat Objects
-wookie_qc <- function(seurat_obj, nf_min = 0, nf_max = 20000, nc_max = 200000, nc_min = 0, pmt = 20, ptr = NULL, species = 'Mouse', pt.size = NULL,legend = TRUE) {
-  if (!inherits(seurat_obj, "Seurat")) {
+# Seurat Object Quality Control function
+#' @name wookieqc
+#' @title Seurat Object Quality Control function
+#' @description Run Iteratively for the necessary QC...
+#' @param matrix Seurat object ...
+#' @param nf_min Minimum number of features ...
+#' @param nf_max Maximum number of features ...
+#' @param nc Maximum number of counts ...
+#' @param pmt Percentage of mitochondrial genes ...
+#' @param ptr Percentage of ribosomal genes ...
+#' @param group Grouping variable ...
+#' @param species species in dataset Mouse or Human only ...
+#' @param colors Colors for facetting ...
+#' @param pt.size data points in violin plot
+#' @return Seurat object after quality control
+#' @export
+
+wookie_qc <- function(seurat_obj, nf_min = 0, nf_max = 20000,
+                      nc_max = 200000,nc_min = 0, pmt = 20,
+                      ptr = NULL, species = 'Mouse', 
+                      pt.size = NULL,legend = TRUE) {
+ 
+  
+   if (!inherits(seurat_obj, "Seurat")) {
     stop("Input must be a Seurat object.")
   }
   
@@ -50,7 +71,10 @@ wookie_qc <- function(seurat_obj, nf_min = 0, nf_max = 20000, nc_max = 200000, n
     seurat_obj[['percent.ribo']] <- PercentageFeatureSet(seurat_obj, pattern = "^Rp[sl]")
   }
   
-  subset_criteria <- subset(seurat_obj@meta.data, nFeature_RNA > nf_min & nFeature_RNA < nf_max & nCount_RNA < nc_max & nCount_RNA > nc_min &percent.mt < pmt)
+  subset_criteria <- subset(seurat_obj@meta.data, nFeature_RNA > nf_min &
+                              nFeature_RNA < nf_max & nCount_RNA < nc_max &
+                              nCount_RNA > nc_min &percent.mt < pmt)
+  
   if (!is.null(ptr)) {
     ribo_indices <- which(seurat_obj@meta.data$percent.ribo < ptr)
     subset_criteria <- subset_criteria[ribo_indices, ]
@@ -64,18 +88,25 @@ wookie_qc <- function(seurat_obj, nf_min = 0, nf_max = 20000, nc_max = 200000, n
   
   
   # Visualizations
-  vl_plot <- VlnPlot(seurat_obj, features = c("nFeature_RNA", "nCount_RNA", "percent.mt", if (!is.null(ptr)) "percent.ribo"), ncol = 4, pt.size = pt.size)
+  vl_plot <- VlnPlot(seurat_obj,
+                     features = c("nFeature_RNA", "nCount_RNA", "percent.mt",
+                                  if (!is.null(ptr)) "percent.ribo"),
+                                  ncol = 4, pt.size = pt.size)
   
   plot1 <- if (legend) {
-    FeatureScatter(seurat_obj, feature1 = "nCount_RNA", feature2 = "nFeature_RNA")
+    FeatureScatter(seurat_obj, feature1 = "nCount_RNA",
+                   feature2 = "nFeature_RNA")
   } else {
-    FeatureScatter(seurat_obj, feature1 = "nCount_RNA", feature2 = "nFeature_RNA") + NoLegend()
+    FeatureScatter(seurat_obj, feature1 = "nCount_RNA",
+                   feature2 = "nFeature_RNA") + NoLegend()
   }
   
   plot2 <- if (legend) {
-    FeatureScatter(seurat_obj, feature1 = "percent.mt", feature2 = "nFeature_RNA")
+    FeatureScatter(seurat_obj, feature1 = "percent.mt",
+                   feature2 = "nFeature_RNA")
   } else {
-    FeatureScatter(seurat_obj, feature1 = "percent.mt", feature2 = "nFeature_RNA") + NoLegend()
+    FeatureScatter(seurat_obj, feature1 = "percent.mt",
+                   feature2 = "nFeature_RNA") + NoLegend()
   }
   
   plots_list <- list(vl_plot, plot1, plot2)
@@ -92,7 +123,8 @@ wookie_qc <- function(seurat_obj, nf_min = 0, nf_max = 20000, nc_max = 200000, n
   }
   
   # Combine all plots into a single plot
-  combined_plot <- cowplot::plot_grid(plotlist = plots_list, ncol = 2, align = 'v')
+  combined_plot <- cowplot::plot_grid(plotlist = plots_list,
+                                      ncol = 2, align = 'v')
   
   # Display the combined plot
   
@@ -153,7 +185,8 @@ wookie_scrub <- function(seu_obj, preprocess = FALSE) {
   seu_obj@meta.data$scrublet_call <- scrub_type
   
   # Plot histogram of Scrublet scores
-  hist(scrub_scores, main = "Histogram of Scrublet Scores", xlab = "Scrublet Score")
+  hist(scrub_scores, main = "Histogram of Scrublet Scores",
+       xlab = "Scrublet Score")
   
   return(seu_obj)
 }
@@ -170,7 +203,8 @@ wookie_scrub <- function(seu_obj, preprocess = FALSE) {
 #' @param min_features minimum number of features found in a cell ...
 #' @return Summed and merged Seurat object
 #' @export
-wookie_matrix_sum <- function(matrix1, matrix2, sample = 'sample', min_cells = 3, min_features = 200) {
+wookie_matrix_sum <- function(matrix1, matrix2, sample = 'sample',
+                              min_cells = 3, min_features = 200) {
   load_libraries()
   
   # Check if row names are identical
@@ -189,8 +223,10 @@ wookie_matrix_sum <- function(matrix1, matrix2, sample = 'sample', min_cells = 3
   common_cols <- intersect(colnames(matrix1), colnames(matrix2))
   
   # Subset matrices to common rows and columns
-  matrix1_common <- matrix1[which(rownames(matrix1) %in% common_rows), which(colnames(matrix1) %in% common_cols)]
-  matrix2_common <- matrix2[which(rownames(matrix2) %in% common_rows), which(colnames(matrix2) %in% common_cols)]
+  matrix1_common <- matrix1[which(rownames(matrix1) %in% common_rows),
+                            which(colnames(matrix1) %in% common_cols)]
+  matrix2_common <- matrix2[which(rownames(matrix2) %in% common_rows), 
+                            which(colnames(matrix2) %in% common_cols)]
   
   # Sum the matrices
   result_matrix <- matrix1_common + matrix2_common
@@ -210,7 +246,8 @@ wookie_matrix_sum <- function(matrix1, matrix2, sample = 'sample', min_cells = 3
   result_matrix <- result_matrix[, original_col_order]
   
   # Create Seurat object
-  seu_obj <- CreateSeuratObject(result_matrix, min.cells = min_cells, min.features = min_features, project = sample)
+  seu_obj <- CreateSeuratObject(result_matrix, min.cells = min_cells,
+                                min.features = min_features, project = sample)
   
   return(seu_obj)
 }
@@ -222,9 +259,10 @@ wookie_matrix_sum <- function(matrix1, matrix2, sample = 'sample', min_cells = 3
 #' @description plot multiple UMAP's for different numbers of a feature i.e Highly variable genes or Most Abundant genes ...
 #' @return plot saved to global environment
 #' @export
-wookie_multifeatureumap <- function(object = seu_obj, features = features, min.dist = 0.1, 
-                                 max_features = 3000,ftype='HVG',
-                                 step = 500,out_name = 'combined_umap') {
+wookie_multifeatureumap <- function(object = seu_obj, features = features,
+                                    min.dist = 0.1, max_features = 3000,
+                                    ftype='HVG',step = 500,
+                                    out_name = 'combined_umap') {
   load_libraries()
   plot_list <- list()
   
@@ -232,7 +270,8 @@ wookie_multifeatureumap <- function(object = seu_obj, features = features, min.d
     current_features <- features[1:feature_length]
     cat(paste0('Calculating UMAP at ',ftype,':',feature_length))
     current_umap <- RunUMAP(object, features = current_features, min.dist = min.dist)
-    current_plot <- DimPlot(current_umap, reduction = 'umap') + ggtitle(paste('UMAP ',ftype, feature_length))
+    current_plot <- DimPlot(current_umap, reduction = 'umap') + 
+                    ggtitle(paste('UMAP ',ftype, feature_length))
     plot_list[[length(plot_list) + 1]] <- current_plot
     cat(paste0('UMAP done for ',ftype,':',feature_length))
   }
@@ -265,8 +304,10 @@ wookie_Mindist <- function(seurat_obj, features = NULL, dims = 1:30,
   
   for (min_dist in seq(0.1, 0.5, 0.1)) {
     cat(paste0('Calculating UMAP at min.dist:', min_dist, '...'))
-    current_umap <- RunUMAP(seurat_obj, features = features, dims = dims, min.dist = min_dist)
-    current_plot <- DimPlot(current_umap, reduction = 'umap') + ggtitle(paste('UMAP: min.dist:', min_dist))
+    current_umap <- RunUMAP(seurat_obj, features = features,
+                            dims = dims, min.dist = min_dist)
+    current_plot <- DimPlot(current_umap, reduction = 'umap') + 
+                          ggtitle(paste('UMAP: min.dist:', min_dist))
     plot_list[[length(plot_list) + 1]] <- current_plot
     cat("Done.\n")
   }
@@ -287,15 +328,19 @@ wookie_Mindist <- function(seurat_obj, features = NULL, dims = 1:30,
 #' @param split_by Variable for splitting
 #' @return Plot grid
 #' @export
-wookie_featureplot <- function(seuratObject, featureList, ncol = 3, pt.size = 0.8,split_by = NULL) {
+wookie_featureplot <- function(seuratObject, featureList, ncol = 3,
+                               pt.size = 0.8,split_by = NULL) {
   load_libraries()
   plotList <- lapply(featureList, function(feature) {
-    FeaturePlot(object = seuratObject, features = feature, pt.size = pt.size, reduction = "umap",split.by = split_by) +
+    FeaturePlot(object = seuratObject, features = feature, 
+                pt.size = pt.size, reduction = "umap",
+                split.by = split_by) +
       theme(aspect.ratio = 1) +
       scale_color_gradientn(colours = c("#DCDCDC", "yellow", "orange", "red", "#8b0000"))
   })
   
-  plotGrid <- plot_grid(plotlist = plotList, ncol = ncol, rel_widths = rep(1, length(featureList)))
+  plotGrid <- plot_grid(plotlist = plotList, ncol = ncol, 
+                        rel_widths = rep(1, length(featureList)))
   
   return(plotGrid)
 }
@@ -316,7 +361,8 @@ wookie_filter_celltype <- function(seurat_obj, marker_list, cutoff = 0.99) {
   print('Ensure marker genes are in RNA$scale.data')
   
   expression_matrix_transposed <- t(seurat_obj@assays$RNA$scale.data)
-  seurat_obj$avg_celltype_expression <- rowMeans(expression_matrix_transposed[, marker_list, drop = FALSE])
+  seurat_obj$avg_celltype_expression <- rowMeans(expression_matrix_transposed[, marker_list,
+                                                                              drop = FALSE])
   
   threshold <- quantile(seurat_obj$avg_celltype_expression, cutoff)
   
@@ -324,7 +370,8 @@ wookie_filter_celltype <- function(seurat_obj, marker_list, cutoff = 0.99) {
   seu_filtered <- seurat_obj[, cellstokeep]
   cellstoremove <- which(seurat_obj$avg_celltype_expression > threshold)
   seu_removed <- seurat_obj[, cellstoremove]
-  print(paste0(length(cellstokeep), ' Cells kept, ', length(cellstoremove), ' cells removed.'))
+  print(paste0(length(cellstokeep), ' Cells kept, ', 
+               length(cellstoremove), ' cells removed.'))
   return(seu_filtered)
 }
 
@@ -343,7 +390,8 @@ wookie_matrix_qc <- function(count_matrix_sparse, fill_color = "#589FFF", title 
   reads_per_gene <- Matrix::rowSums(count_matrix_sparse > 0)
   
   p1 <- ggplot() +
-    geom_histogram(aes(x = log10(reads_per_cell + 1)), fill = fill_color, color = 'black', bins = 30) +
+    geom_histogram(aes(x = log10(reads_per_cell + 1)), fill = fill_color,
+                   color = 'black', bins = 30) +
     ggtitle('Reads per Cell') +
     theme_minimal() +
     theme(panel.border = element_rect(color = "black", fill = NA, size = 1),
@@ -351,7 +399,8 @@ wookie_matrix_qc <- function(count_matrix_sparse, fill_color = "#589FFF", title 
           panel.grid.minor = element_blank())
   
   p2 <- ggplot() +
-    geom_histogram(aes(x = log10(genes_per_cell + 1)), fill = fill_color, color = 'black', bins = 30) +
+    geom_histogram(aes(x = log10(genes_per_cell + 1)), fill = fill_color,
+                   color = 'black', bins = 30) +
     ggtitle('Genes per Cell') +
     theme_minimal() +
     theme(panel.border = element_rect(color = "black", fill = NA, size = 1),
@@ -359,7 +408,8 @@ wookie_matrix_qc <- function(count_matrix_sparse, fill_color = "#589FFF", title 
           panel.grid.minor = element_blank())
   
   p4 <- ggplot() +
-    geom_histogram(aes(x = log10(reads_per_gene + 1)), fill = fill_color, color = 'black', bins = 30) +
+    geom_histogram(aes(x = log10(reads_per_gene + 1)), fill = fill_color,
+                   color = 'black', bins = 30) +
     ggtitle('Reads per Gene') +
     theme_minimal() +
     theme(panel.border = element_rect(color = "black", fill = NA, size = 1),
@@ -367,7 +417,8 @@ wookie_matrix_qc <- function(count_matrix_sparse, fill_color = "#589FFF", title 
           panel.grid.minor = element_blank())
   
   p3 <- ggplot() +
-    geom_point(aes(x = reads_per_cell, y = genes_per_cell), fill = fill_color, color = 'black', pch = 21, shape = 16, size = 2, alpha = 1) +
+    geom_point(aes(x = reads_per_cell, y = genes_per_cell), fill = fill_color,
+               color = 'black', pch = 21, shape = 16, size = 2, alpha = 1) +
     ggtitle('Reads vs. Genes per Cell') +
     theme_minimal() +
     theme(panel.border = element_rect(color = "black", fill = NA, size = 1),
@@ -395,11 +446,17 @@ wookie_ge_histogram <- function(seurat_obj) {
   
   par(mfrow = c(1, 2))
   
-  hist(expression_data_RNA, breaks = 50, freq = FALSE, main = "Histogram of Gene Expression (RNA)", xlab = "Gene Expression", col = "lightgray")
-  curve(dnorm(x, mean = mean_expr_rna, sd = sd_expr_rna), add = TRUE, col = "blue", lwd = 2)
+  hist(expression_data_RNA, breaks = 50, freq = FALSE,
+       main = "Histogram of Gene Expression (RNA)",
+       xlab = "Gene Expression", col = "lightgray")
+  curve(dnorm(x, mean = mean_expr_rna, sd = sd_expr_rna),
+        add = TRUE, col = "blue", lwd = 2)
   
-  hist(expression_data_SCT, breaks = 50, freq = FALSE, main = "Histogram of Gene Expression (SCT)", xlab = "Gene Expression", col = "lightgray")
-  curve(dnorm(x, mean = mean_expr_sct, sd = sd_expr_sct), add = TRUE, col = "blue", lwd = 2)
+  hist(expression_data_SCT, breaks = 50, freq = FALSE,
+       main = "Histogram of Gene Expression (SCT)", 
+       xlab = "Gene Expression", col = "lightgray")
+  curve(dnorm(x, mean = mean_expr_sct, sd = sd_expr_sct),
+        add = TRUE, col = "blue", lwd = 2)
   
   par(mfrow = c(1, 1))
 }
@@ -417,7 +474,8 @@ wookie_get_pc <- function(seurat_obj, reduction = 'pca') {
   cumu <- cumsum(pct)
   
   col <- which(cumu > 90 & pct < 5)[1]
-  co2 <- sort(which((pct[1:(length(pct) - 1)] - pct[2:length(pct)]) > 0.1), decreasing = TRUE)[1] + 1
+  co2 <- sort(which((pct[1:(length(pct) - 1)] - pct[2:length(pct)]) > 0.1),
+              decreasing = TRUE)[1] + 1
   pcs <- min(col, co2)
   return(pcs)
 }
