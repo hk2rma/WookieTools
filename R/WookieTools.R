@@ -1,4 +1,4 @@
-# WookieTools - Version 0.5.2
+# WookieTools - Version 0.5.3
 
 # Install and load necessary packages safely
 ensure_packages <- function(required_packages) {
@@ -477,4 +477,34 @@ wookie_get_pc <- function(seurat_obj, reduction = 'pca') {
               decreasing = TRUE)[1] + 1
   pcs <- min(col, co2)
   return(pcs)
+}
+
+
+# Function to create a plot for a given Seurat object
+#' @name wookie_fc_hist 
+#' @title histograms of nFeature and nCounts
+#' @description Get histograms of nFeature and nCounts and possible thresholds
+#' @param seurat_obj Seurat Object
+#' @param title title of the plot
+#' @param fi features threshold
+#' @param ci counts threshold 
+#' @return plot
+#' @export
+wookie_fc_hist <- function(seurat_obj, title = 'Histogram', fi = 0, ci = 0) {
+  # Extract data
+  data <- FetchData(seurat_obj, vars = c("nFeature_RNA", "nCount_RNA"))
+  
+  # Create histograms using ggplot2
+  p1 <- ggplot(data, aes(x = nFeature_RNA)) +
+    geom_histogram(bins = 100, fill = "#06125F") +
+    geom_vline(xintercept = fi, color = "#FF0909", linetype = "dashed") +
+    ggtitle(paste(title, "- Features"))
+  
+  p2 <- ggplot(data, aes(x = nCount_RNA)) +
+    geom_histogram(bins = 100, fill = "#06125F") +
+    geom_vline(xintercept = ci, color = "#FF0909", linetype = "dashed") +
+    ggtitle(paste(title, "- Counts"))
+  
+  # Return combined plot for each seurat object
+  return(p1 + p2 + plot_layout(ncol = 2))
 }
