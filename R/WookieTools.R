@@ -1,4 +1,4 @@
-# WookieTools - Version 0.5.1
+# WookieTools - Version 0.5.2
 
 # Install and load necessary packages safely
 ensure_packages <- function(required_packages) {
@@ -53,7 +53,6 @@ load_libraries()
 #' @param pt.size data points in violin plot
 #' @return Seurat object after quality control
 #' @export
-
 wookie_qc <- function(seurat_obj, nf_min = 0, nf_max = 20000,
                       nc_max = 200000,nc_min = 0, pmt = 20,
                       ptr = NULL, species = 'Mouse', 
