@@ -1,7 +1,7 @@
 Wookie Tools
-Version 0.5.3
+Version 0.5.5
 
-Hand Tools for Single Cell RNA-Seq Analysis
+Handy Tools for Single Cell RNA-Seq Analysis
 
 Installation: 
 ```{r, install Wookie Tools}

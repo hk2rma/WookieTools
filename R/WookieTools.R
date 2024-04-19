@@ -1,4 +1,4 @@
-# WookieTools - Version 0.5.3
+# WookieTools - Version 0.5.5
 
 # Install and load necessary packages safely
 ensure_packages <- function(required_packages) {
@@ -46,7 +46,8 @@ load_libraries()
 #' @param nf_max Maximum number of features ...
 #' @param nc Maximum number of counts ...
 #' @param pmt Percentage of mitochondrial genes ...
-#' @param ptr Percentage of ribosomal genes ...
+#' @param ptr_max maximum percentage of ribosomal genes ...
+#' @param ptr_min minimum percentage of ribosomal genes ...
 #' @param group Grouping variable ...
 #' @param species species in dataset Mouse or Human only ...
 #' @param colors Colors for facetting ...
@@ -54,32 +55,30 @@ load_libraries()
 #' @return Seurat object after quality control
 #' @export
 wookie_qc <- function(seurat_obj, nf_min = 0, nf_max = 20000,
-                      nc_max = 200000,nc_min = 0, pmt = 20,
-                      ptr = NULL, species = 'Mouse', 
-                      pt.size = NULL,legend = TRUE) {
- 
+                      nc_max = 200000, nc_min = 0, pmt = 20,
+                      ptr_max = NULL, ptr_min = NULL, species = 'Mouse',
+                      pt.size = NULL, legend = TRUE) {
   
-   if (!inherits(seurat_obj, "Seurat")) {
+  
+  if (!inherits(seurat_obj, "Seurat")) {
     stop("Input must be a Seurat object.")
   }
   
   mt_pattern <- if (species == 'Mouse') "^mt-" else "^MT-"
   
   seurat_obj[['percent.mt']] <- PercentageFeatureSet(seurat_obj, pattern = mt_pattern)
-  if (!is.null(ptr)) {
-    seurat_obj[['percent.ribo']] <- PercentageFeatureSet(seurat_obj, pattern = "^Rp[sl]")
+  seurat_obj[['percent.ribo']] <- PercentageFeatureSet(seurat_obj, pattern = "^Rp[sl]")
+  
+  seurat_obj <- subset(seurat_obj, nFeature_RNA > nf_min &
+                         nFeature_RNA < nf_max & nCount_RNA < nc_max &
+                         nCount_RNA > nc_min & percent.mt < pmt)
+  
+  if (!is.null(ptr_min)) {
+    seurat_obj <- subset(seurat_obj, percent.ribo > ptr_min) 
   }
-  
-  subset_criteria <- subset(seurat_obj@meta.data, nFeature_RNA > nf_min &
-                              nFeature_RNA < nf_max & nCount_RNA < nc_max &
-                              nCount_RNA > nc_min &percent.mt < pmt)
-  
-  if (!is.null(ptr)) {
-    ribo_indices <- which(seurat_obj@meta.data$percent.ribo < ptr)
-    subset_criteria <- subset_criteria[ribo_indices, ]
-  }
-  
-  seurat_obj <- subset(seurat_obj, cells = rownames(subset_criteria))
+  if (!is.null(ptr_max) ) {
+    seurat_obj <- subset(seurat_obj, percent.ribo < ptr_max) 
+  }  
   
   if (ncol(seurat_obj) == 0) {
     stop("No cells meet the quality control criteria.")
@@ -89,8 +88,8 @@ wookie_qc <- function(seurat_obj, nf_min = 0, nf_max = 20000,
   # Visualizations
   vl_plot <- VlnPlot(seurat_obj,
                      features = c("nFeature_RNA", "nCount_RNA", "percent.mt",
-                                  if (!is.null(ptr)) "percent.ribo"),
-                                  ncol = 4, pt.size = pt.size)
+                                  if (!is.null(ptr_max) || !is.null(ptr_min)) "percent.ribo"),
+                     ncol = 4, pt.size = pt.size)
   
   plot1 <- if (legend) {
     FeatureScatter(seurat_obj, feature1 = "nCount_RNA",
@@ -110,7 +109,7 @@ wookie_qc <- function(seurat_obj, nf_min = 0, nf_max = 20000,
   
   plots_list <- list(vl_plot, plot1, plot2)
   
-  if (!is.null(ptr)) {
+  if (!is.null(ptr_max) || !is.null(ptr_min)) {
     plot3 <- if (legend) {
       FeatureScatter(seurat_obj, feature1 = 'percent.ribo',
                      feature2 = 'nFeature_RNA')
@@ -182,11 +181,7 @@ wookie_scrub <- function(seu_obj, preprocess = FALSE) {
   message("Adding Scrublet results to the Seurat object...")
   seu_obj@meta.data$scrublet_score <- scrub_scores
   seu_obj@meta.data$scrublet_call <- scrub_type
-  
-  # Plot histogram of Scrublet scores
-  hist(scrub_scores, main = "Histogram of Scrublet Scores",
-       xlab = "Scrublet Score")
-  
+
   return(seu_obj)
 }
 

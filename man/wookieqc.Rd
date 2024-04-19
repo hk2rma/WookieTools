@@ -12,7 +12,8 @@ wookie_qc(
   nc_max = 2e+05,
   nc_min = 0,
   pmt = 20,
-  ptr = NULL,
+  ptr_max = NULL,
+  ptr_min = NULL,
   species = "Mouse",
   pt.size = NULL,
   legend = TRUE
@@ -25,7 +26,9 @@ wookie_qc(
 
 \item{pmt}{Percentage of mitochondrial genes ...}
 
-\item{ptr}{Percentage of ribosomal genes ...}
+\item{ptr_max}{maximum percentage of ribosomal genes ...}
+
+\item{ptr_min}{minimum percentage of ribosomal genes ...}
 
 \item{species}{species in dataset Mouse or Human only ...}
 
