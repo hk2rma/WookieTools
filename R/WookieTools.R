@@ -1,44 +1,10 @@
-# WookieTools - Version 0.5.5
-
-# Install and load necessary packages safely
-ensure_packages <- function(required_packages) {
-  installed <- rownames(installed.packages())
-  missing_packages <- setdiff(required_packages, installed)
-  
-  if (length(missing_packages) > 0) {
-    install.packages(missing_packages)
-  }
-  invisible(lapply(required_packages, library, character.only = TRUE))
-}
-
-# Ensure Bioconductor packages are installed
-ensure_bioc_packages <- function(required_packages) {
-  if (!requireNamespace("BiocManager", quietly = TRUE)) {
-    install.packages("BiocManager")
-  }
-  
-  for (package in required_packages) {
-    if (!require(package, character.only = TRUE)) {
-      BiocManager::install(package)
-    }
-  }
-  
-  invisible(lapply(required_packages, library, character.only = TRUE))
-}
-
-# Load essential libraries
-load_libraries <- function() {
-  cran_packages <- c("Matrix","tidyr", "ggplot2", "plyr","dplyr", "cowplot", "patchwork", "Seurat")
-  bioc_packages <- c("SingleCellExperiment", "scds")
-  
-  ensure_packages(cran_packages)
-  ensure_bioc_packages(bioc_packages)
-}
-
-load_libraries()
+# WookieTools - Version 0.6
 
 # Seurat Object Quality Control function
 #' @name wookieqc
+#' @import Seurat 
+#' @import ggplot2
+#' @import cowplot
 #' @title Seurat Object Quality Control function
 #' @description Run Iteratively for the necessary QC...
 #' @param matrix Seurat object ...
@@ -134,6 +100,10 @@ wookie_qc <- function(seurat_obj, nf_min = 0, nf_max = 20000,
 # Doublet finder using Scrublet
 #' @name wookie_scrub
 #' @title Scrublet for Seurat ...
+#' @import Seurat 
+#' @import ggplot2
+#' @importFrom singleCellTK runScrublet
+#' @import cowplot
 #' @description Run Scrublet on a Seurat Object ...
 #' @param seu_obj Seurat object ...
 #' @param preprocess specify if the object has been preprocces and runPCA was done  ...
@@ -168,7 +138,7 @@ wookie_scrub <- function(seu_obj, preprocess = FALSE) {
   sce_obj <- as.SingleCellExperiment(seu_obj)
   
   # Run Scrublet
-  sce_scrub <- singleCellTK::runScrublet(sce_obj)
+  sce_scrub <- runScrublet(sce_obj)
   
   # Convert SingleCellExperiment back to Seurat
   seu_obj_scrubbed <- as.Seurat(sce_scrub)
@@ -189,6 +159,10 @@ wookie_scrub <- function(seu_obj, preprocess = FALSE) {
 # Input: Count Matrices | Output: Seurat Object
 #' @name wookie_matrix_sum
 #' @title Matrix Sum function
+#' @import Matrix
+#' @import dplyr
+#' @import tidyr
+#' @import patchwork
 #' @description Merge two count matrices, where the cells are the same, to obtain a single seurat object with the counts from two matrices summed for each cell ...
 #' @param matrix1 count matrix ...
 #' @param matrix2 count matrix ...
@@ -250,6 +224,9 @@ wookie_matrix_sum <- function(matrix1, matrix2, sample = 'sample',
 # Features must be obtained and given as input
 #' @name wookie_multifeatureumap
 #' @title Plot UMAPs to test features
+#' @import Seurat
+#' @import ggplot2
+#' @import cowplot
 #' @description plot multiple UMAP's for different numbers of a feature i.e Highly variable genes or Most Abundant genes ...
 #' @return plot saved to global environment
 #' @export
@@ -257,7 +234,6 @@ wookie_multifeatureumap <- function(object = seu_obj, features = features,
                                     min.dist = 0.1, max_features = 3000,
                                     ftype='HVG',step = 500,
                                     out_name = 'combined_umap') {
-  load_libraries()
   plot_list <- list()
   
   for (feature_length in seq(500, max_features, step)) {
@@ -284,6 +260,9 @@ wookie_multifeatureumap <- function(object = seu_obj, features = features,
 # Function to plot multiple UMAPs at different min.dist values
 #' @name wookie_Mindist
 #' @title Plot UMAPs for various min.dist values
+#' @import Seurat
+#' @import cowplot
+#' @import ggplot2
 #' @description Plot UMAPs for different min.dist values
 #' @param seurat_obj Seurat object
 #' @param features Features to use for UMAP
@@ -293,7 +272,6 @@ wookie_multifeatureumap <- function(object = seu_obj, features = features,
 #' @export
 wookie_Mindist <- function(seurat_obj, features = NULL, dims = 1:30, 
                                      out_name = 'min_dist_umaps') {
-  load_libraries()
   plot_list <- list()
   
   for (min_dist in seq(0.1, 0.5, 0.1)) {
@@ -314,6 +292,9 @@ wookie_Mindist <- function(seurat_obj, features = NULL, dims = 1:30,
 # Function to plot multiple features with color map
 #' @name wookie_featureplot
 #' @title Plot multiple features with color map
+#' @import Seurat
+#' @import ggplot2
+#' @import cowplot
 #' @description Plot multiple features with custom color scale
 #' @param seurat_obj Seurat object
 #' @param feature_list List of features to plot
@@ -324,7 +305,6 @@ wookie_Mindist <- function(seurat_obj, features = NULL, dims = 1:30,
 #' @export
 wookie_featureplot <- function(seuratObject, featureList, ncol = 3,
                                pt.size = 0.8,split_by = NULL) {
-  load_libraries()
   plotList <- lapply(featureList, function(feature) {
     FeaturePlot(object = seuratObject, features = feature, 
                 pt.size = pt.size, reduction = "umap",
@@ -345,6 +325,11 @@ wookie_featureplot <- function(seuratObject, featureList, ncol = 3,
 # Function to filter particular cell types based on marker gene expression
 #' @name wookie_filter_celltype
 #' @title Filter particular cell types based on marker gene expression
+#' @import Seurat
+#' @import patchwork
+#' @import tidyr
+#' @import Matrix
+#' @import dplyr
 #' @description Remove specific cell types based on marker gene expression
 #' @param seurat_obj Seurat object
 #' @param marker_list List of marker genes for the cell type to remove
@@ -372,6 +357,10 @@ wookie_filter_celltype <- function(seurat_obj, marker_list, cutoff = 0.99) {
 # Function to plot QC metrics of a sparse matrix
 #' @name wookie_matrix_qc
 #' @title Plot QC metrics of a sparse matrix
+#' @import Seurat
+#' @import patchwork
+#' @import ggplot2
+#' @import cowplot
 #' @description Plot QC metrics of a sparse matrix
 #' @param count_matrix_sparse Sparse matrix
 #' @param fill_color Plot color (default: #589FFF)
@@ -425,6 +414,10 @@ wookie_matrix_qc <- function(count_matrix_sparse, fill_color = "#589FFF", title 
 # Function to compare Log Normalisation and SCT (Histogram)
 #' @name wookie_ge_histogram
 #' @title Compare Log Normalisation and SCT (Histogram)
+#' @import Seurat
+#' @import patchwork
+#' @import ggplot2
+#' @import cowplot
 #' @description Compare Log Normalisation and SCT
 #' @param seurat_obj Seurat Object with both RNA and SCT assays
 #' @return Histogram comparing Log Normalisation and SCT
@@ -458,6 +451,7 @@ wookie_ge_histogram <- function(seurat_obj) {
 # Function to get optimal number of PCs
 #' @name wookie_get_pc 
 #' @title Get Optimal Number of PCs
+#' @import Seurat
 #' @description Get the optimal number of principal components to use
 #' @param seurat_obj Seurat Object
 #' @param reduction Type of reduction (e.g., 'pca')
@@ -478,6 +472,10 @@ wookie_get_pc <- function(seurat_obj, reduction = 'pca') {
 # Function to create a plot for a given Seurat object
 #' @name wookie_fc_hist 
 #' @title histograms of nFeature and nCounts
+#' @import Seurat
+#' @import patchwork
+#' @import ggplot2
+#' @import cowplot
 #' @description Get histograms of nFeature and nCounts and possible thresholds
 #' @param seurat_obj Seurat Object
 #' @param title title of the plot
