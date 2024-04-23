@@ -1,4 +1,4 @@
-# WookieTools - Version 0.6.2.2
+# WookieTools - Version 0.6.3
 
 # Seurat Object Quality Control function
 #' @name wookieqc
@@ -529,7 +529,6 @@ wookie_dotplot <- function(seurat_obj, feature_list , assay = 'RNA',scale.by = '
     coord_flip()+
     scale_color_gradientn(colours = c("#DCDCDC", "yellow", "orange", "red", "#8b0000"))+ 
     ggtitle(tag)
-  print(dp)
   wookieSay()
   return(dp)
 }
