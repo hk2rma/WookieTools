@@ -1,4 +1,4 @@
-# WookieTools - Version 0.6
+# WookieTools - Version 0.6.2
 
 # Seurat Object Quality Control function
 #' @name wookieqc
@@ -91,9 +91,10 @@ wookie_qc <- function(seurat_obj, nf_min = 0, nf_max = 20000,
                                       ncol = 2, align = 'v')
   
   # Display the combined plot
-  
   print(combined_plot)
+  wookieSay()
   return(seurat_obj)
+  
   
 }
 
@@ -151,7 +152,7 @@ wookie_scrub <- function(seu_obj, preprocess = FALSE) {
   message("Adding Scrublet results to the Seurat object...")
   seu_obj@meta.data$scrublet_score <- scrub_scores
   seu_obj@meta.data$scrublet_call <- scrub_type
-
+  wookieSay()
   return(seu_obj)
 }
 
@@ -216,7 +217,7 @@ wookie_matrix_sum <- function(matrix1, matrix2, sample = 'sample',
   # Create Seurat object
   seu_obj <- CreateSeuratObject(result_matrix, min.cells = min_cells,
                                 min.features = min_features, project = sample)
-  
+  wookieSay()
   return(seu_obj)
 }
 
@@ -251,7 +252,7 @@ wookie_multifeatureumap <- function(object = seu_obj, features = features,
   
   # Assign the combined plot to a variable in the global environment
   assign(out_name, combined_plot, envir = globalenv())
-  
+  wookieSay()
   # Return the combined plot
   return(combined_plot)
 }
@@ -286,6 +287,7 @@ wookie_Mindist <- function(seurat_obj, features = NULL, dims = 1:30,
   
   combined_plot <- plot_grid(plotlist = plot_list)
   assign(out_name, combined_plot, envir = globalenv())
+  wookieSay()
   return(combined_plot)
 }
 
@@ -315,7 +317,7 @@ wookie_featureplot <- function(seuratObject, featureList, ncol = 3,
   
   plotGrid <- plot_grid(plotlist = plotList, ncol = ncol, 
                         rel_widths = rep(1, length(featureList)))
-  
+  wookieSay()
   return(plotGrid)
 }
 
@@ -351,6 +353,7 @@ wookie_filter_celltype <- function(seurat_obj, marker_list, cutoff = 0.99) {
   seu_removed <- seurat_obj[, cellstoremove]
   print(paste0(length(cellstokeep), ' Cells kept, ', 
                length(cellstoremove), ' cells removed.'))
+  wookieSay()
   return(seu_filtered)
 }
 
@@ -409,6 +412,7 @@ wookie_matrix_qc <- function(count_matrix_sparse, fill_color = "#589FFF", title 
           panel.grid.minor = element_blank())
   
   plot_grid(p1, p2, p3, p4, ncol = 2) + ggtitle(title)
+  wookieSay()
 }
 
 # Function to compare Log Normalisation and SCT (Histogram)
@@ -446,6 +450,7 @@ wookie_ge_histogram <- function(seurat_obj) {
         add = TRUE, col = "blue", lwd = 2)
   
   par(mfrow = c(1, 1))
+  wookieSay()
 }
 
 # Function to get optimal number of PCs
@@ -465,7 +470,8 @@ wookie_get_pc <- function(seurat_obj, reduction = 'pca') {
   co2 <- sort(which((pct[1:(length(pct) - 1)] - pct[2:length(pct)]) > 0.1),
               decreasing = TRUE)[1] + 1
   pcs <- min(col, co2)
-  return(pcs)
+  cat(paste0('No. of Optimal PCs: ',pcs))
+  wookieSay()
 }
 
 
@@ -498,6 +504,79 @@ wookie_fc_hist <- function(seurat_obj, title = 'Histogram', fi = 0, ci = 0) {
     geom_vline(xintercept = ci, color = "#FF0909", linetype = "dashed") +
     ggtitle(paste(title, "- Counts"))
   
+  wookieSay()
   # Return combined plot for each seurat object
   return(p1 + p2 + plot_layout(ncol = 2))
+  
+}
+
+# Function to plot multiple features with color map
+#' @name wookie_dotplot
+#' @title Plot dotplots with color map
+#' @import Seurat
+#' @import ggplot2
+#' @import cowplot
+#' @description dotplot
+#' @param seurat_obj Seurat object
+#' @param assay default RNA
+#' @param feature_list List of markers
+#' @param tag plot title
+#' @param scale.by scale.by
+#' @return Pdotplot
+#' @export
+wookie_dotplot <- function(seurat_obj, feature_list , assay = 'RNA',scale.by = 'size', tag = 'DotPlot'){
+  dp <- DotPlot(seurat_obj, features = feature_list, assay = assay,scale.by = scale.by) +
+    coord_flip()+
+    scale_color_gradientn(colours = c("#DCDCDC", "yellow", "orange", "red", "#8b0000"))+ 
+    ggtitle(tag)
+  print(dp)
+  wookieSay()
+  return(dp)
+}
+
+
+wookieSay <- function() {
+  messages <- c(
+    "May the midichlorians be with you!",
+    "This data analysis is strong with the Force.",
+    "Your single-cell journey to the Endor system has begun.",
+    "You must unlearn what you have learned about normalization.",
+    "Do. Or do not. There is no try when it comes to dimensionality reduction.",
+    "I find your lack of quality control disturbing.",
+    "Great shot, kid! That's one in a million reads!",
+    "Laugh it up, fuzzball! Your p-value adjustment is impressive.",
+    "Hokey religions and ancient data analysis tools are no match for a good Seurat workflow.",
+    "I've got a bad feeling about this cluster.",
+    "The Force flows through every cell.",
+    "Sacredible! Your single-cell data is a true Masterwork.",
+    "Your analysis is an elegant weapon for a more civilized age.",
+    "You don't know the power of the dark side of batch effects.",
+    "Your mind powers will have doubled since the last time we met, count.",
+    "This is the way to handle single-cell data.",
+    "Search your feelings, you know it to be true... that normalization is necessary.",
+    "I am one with the Force, and the Force is with me... and your single-cell data.",
+    "You must learn the ways of the Force if you're to come with me to a higher dimension.",
+    "Strap yourselves in, we're in for some fancy data integration!",
+    "The ability to identify rare cell types is insignificant next to the power of the Force.",
+    "You will never find a more wretched hive of scum and villainy than batch effects.",
+    "These aren't the cells you're looking for. *waves hand*",
+    "Your cells have paid the price for your lack of vision regarding normalization.",
+    "I am altering the analysis. Pray I don't alter it any further.",
+    "The circle is now complete. Your analysis has begun.",
+    "You have controlled your Cell Ranger data. But you have allowed this Seurat... this Seurat to twist your mind.",
+    "The data is strong with this one.",
+    "I find your lack of faith in single-cell analysis disturbing.",
+    "The Force will be with you. Always.",
+    "I'll never join you in your pursuit of batch effects!",
+    "You've failed, Your Highness. I am a Jedi, like my father before me. I will not turn to the dark side of poor quality control.",
+    "The Force is what gives a Jedi their power. It's an energy field created by all living cells that surrounds us, penetrates us, and binds the galaxy together.",
+    "I've been waiting for you, Obi-Wan. We meet again, at last. The circle is now complete. When I left you, I was but the learner; now I am the master of single-cell analysis.",
+    "Your focus determines your reality. Focus on the data, not on your fears of misinterpreting it.",
+    "You must confront your fear of batch effects. Only then will you become a true master of single-cell analysis.",
+    "The fear of batch effects is the path to the dark side. Fear leads to anger, anger leads to hate, hate leads to suffering... in your data interpretation."
+    
+  )
+  
+  message <- sample(messages, 1)
+  cat(message, "\n")
 }
