@@ -1,4 +1,4 @@
-# WookieTools - Version 0.6.3
+# WookieTools - Version 0.6.4
 
 # Seurat Object Quality Control function
 #' @name wookieqc
@@ -533,6 +533,140 @@ wookie_dotplot <- function(seurat_obj, feature_list , assay = 'RNA',scale.by = '
   return(dp)
 }
 
+
+# Function to plot Cluster relationship Tree
+#' @name wookie_clustertree
+#' @title Function to plot Cluster relationship Tree
+#' @import Seurat
+#' @import ggplot2
+#' @description Function to plot Cluster relationship Tree
+#' @param seurat_obj Seurat object
+#' @param dims dimensions to use
+#' @param reorder default is FALSE
+#' @param assay default is 'RNA'
+#' @param reduction default is 'pca'
+#' @param slot default is 'data'
+#' @param reorder.numeric default is FALSE
+#' @param saveplot save a jpeg image to working directory
+#' @param dpi default is 1080
+#' @param height default is 10
+#' @param width default is 10
+#' @param units deafults is 'cm'
+#' @return p
+#' @export
+wookie_clustertree <- function(seurat_obj, dims = NULL, features = NULL, reorder = FALSE ,
+                               reorder.numeric = FALSE, saveplot = FALSE,assay = 'RNA',
+                               reduction = 'pca', slot = 'data',
+                               dpi = 1080, height = 10, width = 10, units = 'cm'){
+  seurat <- BuildClusterTree(
+    seurat_object,
+    dims = dims,
+    assay = assay,
+    reduction = reduction,
+    slot = slot,
+    features = features,
+    reorder = reorder,
+    reorder.numeric = reorder.numeric
+  )
+  
+  tree <- seurat@tools$BuildClusterTree
+  tree$tip.label <- paste0("Cluster ", tree$tip.label)
+  num_tips <- length(tree$tip.label)
+  p <- ggtree::ggtree(tree, aes(x, y)) +
+    scale_y_reverse() +
+    ggtree::geom_tree() +
+    ggtree::theme_tree() +
+    ggtree::geom_tiplab(offset = 1) +
+    ggtree::geom_tippoint(color = rainbow(num_tips), shape = 16, size = 5) +
+    coord_cartesian(clip = 'off') +
+    theme(plot.margin = unit(c(0,2.5,0,0), 'cm'))
+  if(saveplot == TRUE){
+    ggsave('Cluster_tree.jpeg',p,width = width,height = height,dpi = dpi,units = units)
+  }
+  return(p)
+  wookieSay()
+}
+
+
+# Function to plot expression per cluster
+#' @name wookie_pcePlot
+#' @title Function to plot expression per cluster
+#' @import Seurat
+#' @import ggplot2
+#' @description Function to plot Cluster relationship Tree
+#' @param seurat_obj Seurat object
+#' @param seurat_clusters default is 'seurat_clusters'
+#' @param saveplot save a jpeg image to working directory
+#' @param dpi default is 1080
+#' @param height default is 10
+#' @param width default is 10
+#' @param units deafults is 'cm'
+#' @return pce_plot
+#' @export
+wookie_pcePlot <- function(seurat, seurat_clusters= 'seurat_clusters' ,
+  saveplot = FALSE,dpi = 1080, height = 10, width = 10, units = 'cm'){
+  
+  temp_labels <- seurat@meta.data %>%
+    group_by(seurat_clusters) %>%
+    tally()
+
+  p1 <- ggplot() +
+    geom_half_violin(
+      data = seurat@meta.data, aes(seurat_clusters, nCount_RNA, fill = seurat_clusters),
+      side = 'l', show.legend = FALSE, trim = FALSE
+      ) +
+    geom_half_boxplot(
+      data = seurat@meta.data, aes(seurat_clusters, nCount_RNA, fill = seurat_clusters),
+      side = 'r', outlier.color = NA, width = 0.4, show.legend = FALSE
+      ) +
+    geom_text(
+      data = temp_labels,
+      aes(x = seurat_clusters, y = -Inf, label = paste0('n = ', format(n, big.mark = ',', trim = TRUE)), vjust = -1),
+      color = 'black', size = 2.8
+      ) +
+    scale_color_manual(values = custom_colors$discrete) +
+    scale_fill_manual(values = custom_colors$discrete) +
+    scale_y_continuous(name = 'Number of transcripts', labels = scales::comma, expand = c(0.08, 0)) +
+    theme_bw() +
+    theme(
+      panel.grid.major.x = element_blank(),
+      axis.title.x = element_blank()
+    )
+
+  p2 <- ggplot() +
+    geom_half_violin(
+      data = seurat@meta.data, aes(seurat_clusters, nFeature_RNA, fill = seurat_clusters),
+      side = 'l', show.legend = FALSE, trim = FALSE
+      ) +
+    geom_half_boxplot(
+      data = seurat@meta.data, aes(seurat_clusters, nFeature_RNA, fill = seurat_clusters),
+      side = 'r', outlier.color = NA, width = 0.4, show.legend = FALSE
+      ) +
+    geom_text(
+      data = temp_labels,
+      aes(x = seurat_clusters, y = -Inf, label = paste0('n = ', format(n, big.mark = ',', trim = TRUE)), vjust = -1),
+      color = 'black', size = 2.8
+      ) +
+    scale_color_manual(values = custom_colors$discrete) +
+    scale_fill_manual(values = custom_colors$discrete) +
+    scale_y_continuous(name = 'Number of expressed genes', labels = scales::comma, expand = c(0.08, 0)) +
+    theme_bw() +
+    theme(
+      panel.grid.major.x = element_blank(),
+      axis.title.x = element_blank()
+    )
+   
+    pce_plot <- p1 + p2 + plot_layout(ncol = 1)
+    if(saveplot == TRUE){
+    ggsave(
+      'plots/ncount_nfeature_by_cluster.jpeg',
+      p1 + p2 + plot_layout(ncol = 1),
+      height = height, width = width,
+      dpi = dpi,units = units)
+    }
+    return(pce_plot)
+    wookieSay()
+}
 
 wookieSay <- function() {
   messages <- c(
