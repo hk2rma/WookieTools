@@ -578,5 +578,6 @@ wookieSay <- function() {
   )
   
   message <- sample(messages, 1)
-  cat(message, "\n")
+  cat("\n")
+  cat('WookieSays:', message, "\n")
 }
