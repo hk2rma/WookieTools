@@ -1,4 +1,4 @@
-# WookieTools - Version 0.6.4.1
+# WookieTools - Version 0.6.4.2
 
 # Seurat Object Quality Control function
 #' @name wookieqc
@@ -583,8 +583,9 @@ wookie_clustertree <- function(seurat_obj, dims = NULL, features = NULL, reorder
   if(saveplot == TRUE){
     ggsave('Cluster_tree.jpeg',p,width = width,height = height,dpi = dpi,units = units)
   }
-  return(p)
   wookieSay()
+  return(p)
+  
 }
 
 
@@ -665,8 +666,9 @@ wookie_pcePlot <- function(seurat, seurat_clusters= 'seurat_clusters' ,
       height = height, width = width,
       dpi = dpi,units = units)
     }
-    return(pce_plot)
     wookieSay()
+    return(pce_plot)
+    
 }
 
 wookieSay <- function() {
