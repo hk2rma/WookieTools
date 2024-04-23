@@ -1,4 +1,4 @@
-# WookieTools - Version 0.6.4
+# WookieTools - Version 0.6.4.1
 
 # Seurat Object Quality Control function
 #' @name wookieqc
@@ -559,7 +559,7 @@ wookie_clustertree <- function(seurat_obj, dims = NULL, features = NULL, reorder
                                reduction = 'pca', slot = 'data',
                                dpi = 1080, height = 10, width = 10, units = 'cm'){
   seurat <- BuildClusterTree(
-    seurat_object,
+    seurat_obj,
     dims = dims,
     assay = assay,
     reduction = reduction,
@@ -593,6 +593,7 @@ wookie_clustertree <- function(seurat_obj, dims = NULL, features = NULL, reorder
 #' @title Function to plot expression per cluster
 #' @import Seurat
 #' @import ggplot2
+#' @import gghalves
 #' @description Function to plot Cluster relationship Tree
 #' @param seurat_obj Seurat object
 #' @param seurat_clusters default is 'seurat_clusters'
@@ -714,3 +715,22 @@ wookieSay <- function() {
   cat("\n")
   cat('WookieSays:', message, "\n")
 }
+custom_colors <- list()
+colors_dutch <- c(
+  '#FFC312','#C4E538','#12CBC4','#FDA7DF','#ED4C67',
+  '#F79F1F','#A3CB38','#1289A7','#D980FA','#B53471',
+  '#EE5A24','#009432','#0652DD','#9980FA','#833471',
+  '#EA2027','#006266','#1B1464','#5758BB','#6F1E51'
+)
+colors_spanish <- c(
+  '#40407a','#706fd3','#f7f1e3','#34ace0','#33d9b2',
+  '#2c2c54','#474787','#aaa69d','#227093','#218c74',
+  '#ff5252','#ff793f','#d1ccc0','#ffb142','#ffda79',
+  '#b33939','#cd6133','#84817a','#cc8e35','#ccae62'
+)
+
+custom_colors$discrete <- c(colors_dutch, colors_spanish)
+custom_colors$cell_cycle <- setNames(
+  c('#45aaf2', '#f1c40f', '#e74c3c', '#7f8c8d'),
+  c('G1',      'S',       'G2M',     '-')
+)
