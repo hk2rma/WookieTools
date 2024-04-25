@@ -1,4 +1,4 @@
-# WookieTools - Version 0.6.5.1
+# WookieTools - Version 0.6.6
 
 # Seurat Object Quality Control function
 #' @name wookieqc
@@ -96,64 +96,6 @@ wookie_qc <- function(seurat_obj, nf_min = 0, nf_max = 20000,
   return(seurat_obj)
   
   
-}
-
-# Doublet finder using Scrublet
-#' @name wookie_scrub
-#' @title Scrublet for Seurat ...
-#' @import Seurat 
-#' @import ggplot2
-#' @importFrom singleCellTK runScrublet
-#' @import cowplot
-#' @description Run Scrublet on a Seurat Object ...
-#' @param seu_obj Seurat object ...
-#' @param preprocess specify if the object has been preprocces and runPCA was done  ...
-#' @return Seurat object with scrublet scores and call
-#' @export
-wookie_scrub <- function(seu_obj, preprocess = FALSE) {
-  # Load required packages
-  required_packages <- c("Seurat", "SingleCellExperiment", "singleCellTK")
-  for (package in required_packages) {
-    if (!require(package, character.only = TRUE)) {
-      install.packages(package)
-      library(package, character.only = TRUE)
-    }
-  }
-  
-  # Input validation
-  if (!inherits(seu_obj, "Seurat")) {
-    stop("The 'seu_obj' parameter must be a valid Seurat object.")
-  }
-  
-  # Preprocess the Seurat object if required
-  if (preprocess) {
-    message("Preprocessing the Seurat object...")
-    seu_obj <- Seurat::NormalizeData(seu_obj)
-    seu_obj <- Seurat::FindVariableFeatures(seu_obj)
-    seu_obj <- Seurat::ScaleData(seu_obj)
-    seu_obj <- Seurat::RunPCA(seu_obj)
-  }
-  
-  # Convert Seurat object to SingleCellExperiment
-  message("Running Scrublet...")
-  sce_obj <- as.SingleCellExperiment(seu_obj)
-  
-  # Run Scrublet
-  sce_scrub <- runScrublet(sce_obj)
-  
-  # Convert SingleCellExperiment back to Seurat
-  seu_obj_scrubbed <- as.Seurat(sce_scrub)
-  
-  # Extract Scrublet scores and cell type calls
-  scrub_scores <- seu_obj_scrubbed@meta.data$scrublet_score
-  scrub_type <- seu_obj_scrubbed@meta.data$scrublet_call
-  
-  # Add Scrublet scores and cell type calls to the original Seurat object
-  message("Adding Scrublet results to the Seurat object...")
-  seu_obj@meta.data$scrublet_score <- scrub_scores
-  seu_obj@meta.data$scrublet_call <- scrub_type
-  wookieSay()
-  return(seu_obj)
 }
 
 # Function to sum the counts of two matrices containing the same cells
