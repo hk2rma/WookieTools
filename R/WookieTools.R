@@ -1,4 +1,4 @@
-# WookieTools - Version 0.6.4.2
+# WookieTools - Version 0.6.5
 
 # Seurat Object Quality Control function
 #' @name wookieqc
@@ -670,6 +670,124 @@ wookie_pcePlot <- function(seurat, seurat_clusters= 'seurat_clusters' ,
     return(pce_plot)
     
 }
+
+
+# Function to plot silhoutte scores
+#' @name wookie_silhouttePlot
+#' @title Function to plot silhoutte scores for each cluster
+#' @import Seurat
+#' @import ggplot2
+#' @import cluster
+#' @description Function to plot silhoutte scores for each cluster
+#' @param seurat Seurat object
+#' @param cluster default is 'seurat_clusters'
+#' @param dims dimension, default is 1:30
+#' @param reduction default is 'pca'
+#' @return silhoutte plot
+#' @export
+wookie_silhouttePlot <- function(seurat,cluster = 'seurat_clusters',dims = 1:30,reduction = 'pca'){
+  seurat$seurat_clusters <- seurat[[cluster]]
+  distance_matrix <- dist(Embeddings(seurat[[reduction]])[, dims])
+  clusters <- seurat@meta.data$seurat_clusters
+  silhouette <- silhouette(as.numeric(clusters), dist = distance_matrix)
+  seurat@meta.data$silhouette_score <- silhouette[,3]
+  
+  mean_silhouette_score <- mean(seurat@meta.data$silhouette_score)
+  
+  silhoutte_plot <- seurat@meta.data %>%
+    mutate(barcode = rownames(.)) %>%
+    arrange(seurat_clusters,-silhouette_score) %>%
+    mutate(barcode = factor(barcode, levels = barcode)) %>%
+    ggplot() +
+    geom_col(aes(barcode, silhouette_score, fill = seurat_clusters), show.legend = FALSE) +
+    geom_hline(yintercept = mean_silhouette_score, color = 'red', linetype = 'dashed') +
+    scale_x_discrete(name = 'Cells') +
+    scale_y_continuous(name = 'Silhouette score') +
+    scale_fill_manual(values = custom_colors$discrete) +
+    theme_bw() +
+    theme(
+      axis.title.x = element_blank(),
+      axis.text.x = element_blank(),
+      axis.ticks.x = element_blank(),
+      panel.grid.major = element_blank(),
+      panel.grid.minor = element_blank()
+    )+
+    geom_text(
+      data = . %>% group_by(seurat_clusters) %>% slice(1),
+      aes(x = barcode, y = silhouette_score, label = seurat_clusters),
+      hjust = -0.2,
+      vjust = 0.5,
+      angle = 90,
+      size = 3
+    )
+  wookieSay()
+  return(silhoutte_plot)
+  
+}
+
+
+# Function to plot cluster Similarity
+#' @name wookie_clusterSimilarityPlot
+#' @title Function to plot cluster Similarity
+#' @import Seurat
+#' @import ggplot2
+#' @import cluster
+#' @description Function to plot cluster Similarity
+#' @param seurat_obj Seurat object
+#' @param clusters default is 'seurat_clusters'
+#' @param dims dimension, default is 1:30
+#' @param reduction default is 'PCA'
+#' @return cluster Similarity heatmap
+#' @export
+wookie_clusterSimilarityPlot <- function(seurat_obj,dims = 1:30,clusters = 'seurat_clusters',reduction = 'PCA'){
+  seurat_obj$seurat_clusters <- seurat_obj[[clusters]]
+  sce <- as.SingleCellExperiment(seurat_obj)
+  reducedDim(sce, 'PCA_sub') <- reducedDim(sce, 'PCA')[,dims, drop = FALSE]
+  g <- scran::buildSNNGraph(sce, use.dimred = 'PCA_sub')
+  ratio <- bluster::pairwiseModularity(g, seurat@meta.data$seurat_clusters, as.ratio = TRUE)
+  ratio_to_plot <- log10(ratio+1)
+  clus_similarity_Plot <- ratio_to_plot %>%
+    as_tibble() %>%
+    rownames_to_column(var = 'cluster_1') %>%
+    pivot_longer(
+      cols = 2:ncol(.),
+      names_to = 'cluster_2',
+      values_to = 'probability'
+    ) %>%
+    mutate(
+      cluster_1 = as.character(as.numeric(cluster_1) - 1),
+      cluster_1 = factor(cluster_1, levels = rev(unique(cluster_1))),
+      cluster_2 = factor(cluster_2, levels = unique(cluster_2))
+    ) %>%
+    ggplot(aes(cluster_2, cluster_1, fill = probability)) +
+    geom_tile(color = 'white') +
+    geom_text(aes(label = round(probability, digits = 2)), size = 2.5) +
+    scale_x_discrete(name = 'Cluster', position = 'top') +
+    scale_y_discrete(name = 'Cluster') +
+    scale_fill_gradient(
+      name = 'log10(ratio)', low = 'white', high = '#c0392b', na.value = '#bdc3c7',
+      guide = guide_colorbar(
+        frame.colour = 'black', ticks.colour = 'black', title.position = 'left',
+        title.theme = element_text(hjust = 1, angle = 90),
+        barwidth = 0.75, barheight = 10
+      )
+    ) +
+    coord_fixed() +
+    theme_bw() +
+    theme(
+      legend.position = 'right',
+      panel.grid.major = element_blank()
+   )
+  wookieSay()
+  return(clus_similarity_Plot)
+}
+
+
+
+
+
+
+
 
 wookieSay <- function() {
   messages <- c(
