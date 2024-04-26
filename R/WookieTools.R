@@ -1,5 +1,4 @@
 # WookieTools - Version 0.6.7
-cat('WookieSays: "Hello There"')
 
 # Seurat Object Quality Control function
 #' @name wookieqc
@@ -234,51 +233,71 @@ wookie_Mindist <- function(seurat_obj, features = NULL, dims = 1:30,
   return(combined_plot)
 }
 
-# Function to plot multiple features with color map
 #' @name wookie_featureplot
 #' @title Plot multiple features with color map
 #' @import Seurat
 #' @import ggplot2
 #' @import cowplot
 #' @description Plot multiple features with custom color scale
-#' @param seurat_obj Seurat object
-#' @param feature_list List of features to plot
+#' @param seuratObject Seurat object
+#' @param featureList List of features to plot
 #' @param ncol Number of columns for arrangement
 #' @param pt.size Point size for plotting
 #' @param split_by Variable for splitting
+#' @param alpha Alpha transparency value
+#' @param order Whether to order cells based on expression
+#' @param min.cutoff Minimum cutoff value for expression
+#' @param max.cutoff Maximum cutoff value for expression
+#' @param reduction Dimensional reduction technique to use
+#' @param keep.scale Whether to keep the same scale for all features or scale each individually
+#' @param shape.by Variable to represent groups by shape
+#' @param slot slot to use for plotting, default is 'data'
+#' @param blend Whether to blend colors for continuous data
+#' @param blend.threshold Threshold for blending colors
+#' @param label Whether to label cells
+#' @param label.size Size of cell labels
+#' @param label.color Color of cell labels
+#' @param repel Whether to repel labels to avoid overlapping
+#' @param coord.fixed Whether to fix the coordinate aspect ratio
+#' @param by.col Whether to group cells by color
+#' @param sort.cell Deprecated argument
+#' @param interactive Whether to make the plot interactive
+#' @param combine Whether to combine plots into a single grid
+#' @param raster Optional raster object for plotting
+#' @param raster.dpi Resolution for raster plotting
 #' @return Plot grid
 #' @export
 wookie_featureplot <- function(seuratObject, featureList, ncol = 3,
-                               pt.size = 0.8,split_by = NULL,alpha = 1,
-                               order = FALSE,
-                               min.cutoff = NA,
-                               max.cutoff = NA,
-                               reduction = NULL,
-                               keep.scale = "feature",
-                               shape.by = NULL,
-                               slot = "data",
-                               blend = FALSE,
-                               blend.threshold = 0.5,
-                               label = FALSE,
-                               label.size = 4,
-                               label.color = "black",
-                               repel = FALSE,
-                               coord.fixed = FALSE,
-                               by.col = TRUE,
-                               sort.cell = deprecated(),
-                               interactive = FALSE,
-                               combine = TRUE,
-                               raster = NULL,
-                               raster.dpi = c(512, 512)) {
+                  pt.size = 0.8,split_by = NULL,alpha = 1,
+                  order = FALSE,
+                  min.cutoff = NA,
+                  max.cutoff = NA,
+                  reduction = NULL,
+                  keep.scale = "feature",
+                  shape.by = NULL,
+                  slot = "data",
+                  blend = FALSE,
+                  blend.threshold = 0.5,
+                  label = FALSE,
+                  label.size = 4,
+                  label.color = "black",
+                  repel = FALSE,
+                  coord.fixed = FALSE,
+                  by.col = TRUE,
+                  sort.cell = deprecated(),
+                  interactive = FALSE,
+                  combine = TRUE,
+                  raster = NULL,
+                  raster.dpi = c(512, 512)) {
   plotList <- lapply(featureList, function(feature) {
     FeaturePlot(object = seuratObject, features = feature, 
-                pt.size = pt.size, reduction = "umap",
+                pt.size = pt.size,
                 alpha = alpha,
                 order = order,
                 min.cutoff = min.cutoff,
                 max.cutoff = max.cutoff,
                 reduction = reduction,
-                split.by = split.by,
+                split.by = split_by,
                 keep.scale = keep.scale,
                 shape.by = shape.by ,
                 slot = slot,
@@ -294,8 +313,7 @@ wookie_featureplot <- function(seuratObject, featureList, ncol = 3,
                 interactive = interactive,
                 combine = combine,
                 raster = raster,
-                raster.dpi = raster.dpi,
-                split.by = split_by) +
+                raster.dpi = raster.dpi,) +
       theme(aspect.ratio = 1) +
       scale_color_gradientn(colours = c("#DCDCDC", "yellow", "orange", "red", "#8b0000"))
   })

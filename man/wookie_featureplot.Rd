@@ -34,15 +34,57 @@ wookie_featureplot(
 )
 }
 \arguments{
+\item{seuratObject}{Seurat object}
+
+\item{featureList}{List of features to plot}
+
 \item{ncol}{Number of columns for arrangement}
 
 \item{pt.size}{Point size for plotting}
 
 \item{split_by}{Variable for splitting}
 
-\item{seurat_obj}{Seurat object}
+\item{alpha}{Alpha transparency value}
 
-\item{feature_list}{List of features to plot}
+\item{order}{Whether to order cells based on expression}
+
+\item{min.cutoff}{Minimum cutoff value for expression}
+
+\item{max.cutoff}{Maximum cutoff value for expression}
+
+\item{reduction}{Dimensional reduction technique to use}
+
+\item{keep.scale}{Whether to keep the same scale for all features or scale each individually}
+
+\item{shape.by}{Variable to represent groups by shape}
+
+\item{slot}{slot to use for plotting, default is 'data'}
+
+\item{blend}{Whether to blend colors for continuous data}
+
+\item{blend.threshold}{Threshold for blending colors}
+
+\item{label}{Whether to label cells}
+
+\item{label.size}{Size of cell labels}
+
+\item{label.color}{Color of cell labels}
+
+\item{repel}{Whether to repel labels to avoid overlapping}
+
+\item{coord.fixed}{Whether to fix the coordinate aspect ratio}
+
+\item{by.col}{Whether to group cells by color}
+
+\item{sort.cell}{Deprecated argument}
+
+\item{interactive}{Whether to make the plot interactive}
+
+\item{combine}{Whether to combine plots into a single grid}
+
+\item{raster}{Optional raster object for plotting}
+
+\item{raster.dpi}{Resolution for raster plotting}
 }
 \value{
 Plot grid
