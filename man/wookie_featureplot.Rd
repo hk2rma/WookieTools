@@ -9,7 +9,28 @@ wookie_featureplot(
   featureList,
   ncol = 3,
   pt.size = 0.8,
-  split_by = NULL
+  split_by = NULL,
+  alpha = 1,
+  order = FALSE,
+  min.cutoff = NA,
+  max.cutoff = NA,
+  reduction = NULL,
+  keep.scale = "feature",
+  shape.by = NULL,
+  slot = "data",
+  blend = FALSE,
+  blend.threshold = 0.5,
+  label = FALSE,
+  label.size = 4,
+  label.color = "black",
+  repel = FALSE,
+  coord.fixed = FALSE,
+  by.col = TRUE,
+  sort.cell = deprecated(),
+  interactive = FALSE,
+  combine = TRUE,
+  raster = NULL,
+  raster.dpi = c(512, 512)
 )
 }
 \arguments{

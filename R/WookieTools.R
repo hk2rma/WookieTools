@@ -1,4 +1,5 @@
-# WookieTools - Version 0.6.6
+# WookieTools - Version 0.6.7
+cat('WookieSays: "Hello There"')
 
 # Seurat Object Quality Control function
 #' @name wookieqc
@@ -248,10 +249,52 @@ wookie_Mindist <- function(seurat_obj, features = NULL, dims = 1:30,
 #' @return Plot grid
 #' @export
 wookie_featureplot <- function(seuratObject, featureList, ncol = 3,
-                               pt.size = 0.8,split_by = NULL) {
+                               pt.size = 0.8,split_by = NULL,alpha = 1,
+                               order = FALSE,
+                               min.cutoff = NA,
+                               max.cutoff = NA,
+                               reduction = NULL,
+                               keep.scale = "feature",
+                               shape.by = NULL,
+                               slot = "data",
+                               blend = FALSE,
+                               blend.threshold = 0.5,
+                               label = FALSE,
+                               label.size = 4,
+                               label.color = "black",
+                               repel = FALSE,
+                               coord.fixed = FALSE,
+                               by.col = TRUE,
+                               sort.cell = deprecated(),
+                               interactive = FALSE,
+                               combine = TRUE,
+                               raster = NULL,
+                               raster.dpi = c(512, 512)) {
   plotList <- lapply(featureList, function(feature) {
     FeaturePlot(object = seuratObject, features = feature, 
                 pt.size = pt.size, reduction = "umap",
+                alpha = alpha,
+                order = order,
+                min.cutoff = min.cutoff,
+                max.cutoff = max.cutoff,
+                reduction = reduction,
+                split.by = split.by,
+                keep.scale = keep.scale,
+                shape.by = shape.by ,
+                slot = slot,
+                blend = blend,
+                blend.threshold = blend.threshold,
+                label = label,
+                label.size = label.size,
+                label.color = label.color,
+                repel = repel,
+                ncol = ncol,
+                coord.fixed = coord.fixed,
+                by.col = by.col,
+                interactive = interactive,
+                combine = combine,
+                raster = raster,
+                raster.dpi = raster.dpi,
                 split.by = split_by) +
       theme(aspect.ratio = 1) +
       scale_color_gradientn(colours = c("#DCDCDC", "yellow", "orange", "red", "#8b0000"))
@@ -726,8 +769,111 @@ wookie_clusterSimilarityPlot <- function(seurat_obj,dims = 1:30,clusters = 'seur
   return(clus_similarity_Plot)
 }
 
-
-
+# Function to plot Jaccard similarity index
+#' @name wookie_jaccardPlot
+#' @title Function to plot Jaccard similarity index
+#' @import Seurat
+#' @import reshape2
+#' @import viridis
+#' @import ggplot2
+#' @import cluster
+#' @description Function to plot Jaccard similarity index
+#' @param seurat_obj Seurat object
+#' @param clusters Name of the column in the Seurat object containing cluster assignments, default is 'seurat_clusters'
+#' @param logfc.threshold Log fold-change threshold, default is 0.95
+#' @param min.pct Minimum percentage of cells expressing a gene, default is 0.25
+#' @param test.use Statistical test to use for finding differentially expressed genes, default is "wilcox"
+#' @param fdr.threshold False discovery rate threshold, default is 0.05
+#' @param p_val_bonf.threshold Bonferroni-corrected p-value threshold, default is 0.05
+#' @param avg.log2fc.threshold Average log2 fold-change threshold, default is 0.25
+#' @param title Title for the plot, default is 'Wookie_Jaccard'
+#' @param saveplot Boolean indicating whether to save the plot, default is FALSE
+#' @param height Height of the plot in the specified units, default is 10
+#' @param width Width of the plot in the specified units, default is 10
+#' @param dpi Resolution of the saved plot, default is 700
+#' @param units Units for the plot dimensions, default is 'cm'
+#' @param limitsize Boolean indicating whether to limit the size of the plot, default is FALSE
+#' @return plot Jaccard similarity index
+#' @export
+wookie_jaccardPlot <- function(seurat_obj,clusters = 'seurat_clusters',
+                               logfc.threshold = 0.95,
+                               min.pct = 0.25,
+                               test.use = "wilcox",
+                               fdr.threshold = 0.05,
+                               p_val_bonf.threshold = 0.05,
+                               avg.log2fc.threshold = 0.25,
+                               title = 'Wookie_Jaccard',
+                               saveplot = FALSE,
+                               height = 10, width = 10,
+                               dpi = 700,units = 'cm',limitsize = FALSE){
+  
+  seurat_obj$seurat_clusters <- seurat_obj[[clusters]]
+  Idents(seurat_obj) <- seurat_obj@meta.data$seurat_clusters
+  clusters <- levels(seurat_obj)
+  # Initialize empty lists to store markers and DEGs for each cluster
+  markers_list <- list()
+  degs_list <- list()
+  
+  # Iterate over each cluster
+  for (i in clusters) {
+    # Define clusters to compare with
+    compare_me <- clusters[clusters != i]
+    
+    # Find markers for the current cluster
+    markers_i <- FindMarkers(seurat_obj, ident.1 = i, ident.2 = compare_me,
+                             logfc.threshold = logfc.threshold, min.pct = min.pct,
+                             test.use = test.use, verbose = FALSE)
+    markers_i$fdr <- p.adjust(markers_i$p_val, method = "fdr") 
+    markers_i <- markers_i[markers_i$fdr < fdr.threshold & 
+                             markers_i$p_val_adj < p_val_bonf.threshold &
+                             markers_i$avg_log2FC > avg.log2fc.threshold , ]
+    
+    # Store markers in the markers_list
+    markers_list[[i]] <- markers_i
+    
+    # Store DEGs in the degs_list
+    degs_list[[i]] <- rownames(markers_i)
+  }
+  
+  # Calculate pairwise Jaccard similarities
+  jaccard_similarities <- sapply(degs_list, function(x) {
+    sapply(degs_list, function(y) {
+      length(intersect(x, y)) / length(union(x, y))
+    })
+  })
+  
+  # Convert the similarity matrix to a data frame
+  jaccard_df <- as.data.frame(jaccard_similarities)
+  jaccard_df$Cluster1 <- rownames(jaccard_df)
+  jaccard_df <- melt(jaccard_df, id.vars = "Cluster1", variable.name = "Cluster2",
+                     value.name = "Jaccard_Similarity")
+  
+  # Convert Cluster1 and Cluster2 to factors with specified levels
+  jaccard_df$Cluster1 <- factor(jaccard_df$Cluster1, levels = clusters)
+  jaccard_df$Cluster2 <- factor(jaccard_df$Cluster2, levels = clusters)
+  
+  # Plot the Jaccard similarities
+  js_plot <- ggplot(jaccard_df, aes(x = Cluster1, y = Cluster2, fill = Jaccard_Similarity)) +
+    geom_tile() +
+    geom_text(aes(label = round(Jaccard_Similarity, 2)), color = "white", size = 3) +
+    scale_fill_gradientn(colours = viridis(20,direction = 1)) +
+    theme_minimal() +
+    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1),
+          axis.text.y = element_text(angle = 0, vjust = 0.5, hjust = 1)) +
+    labs(x = "Cluster", y = "Cluster", fill = "Jaccard Similarity",
+         title = "Jaccard Similarity of DEGs between Clusters",
+         caption = title) +
+    coord_fixed(ratio = 1)
+  
+  if(saveplot){
+    ggsave('jaccard.jpeg', js_plot,
+           height = height, width = width,
+           dpi = dpi,units = units,limitsize = limitsize)
+  }
+  wookieSay()
+  return(js_plot)
+  
+}
 
 
 
@@ -876,7 +1022,8 @@ wookieSay <- function() {
     "I have brought peace, freedom, justice, and security to my single-cell experiment... through the power of the Force and good experimental design... and proper normalization.",
     "You underestimate the power of the dark side... of batch effects and overclustering... and improper normalization.",
     "I am a master of single-cell analysis, Darth Vader. I must not let myself be defeated by your lack of faith in the data... or your poor experimental design.",
-    "Your hate has made you powerful. But I sense there is still good in you, young analyst... you must embrace the light side of proper normalization and quality control... and a good experimental design."
+    "Your hate has made you powerful. But I sense there is still good in you, young analyst... you must embrace the light side of proper normalization and quality control... and a good experimental design.",
+    "This is not another star wars pun. *waves hand*"
   )
     
  
