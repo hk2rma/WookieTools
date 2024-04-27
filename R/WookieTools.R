@@ -1,4 +1,4 @@
-# WookieTools - Version 0.6.7.1
+# WookieTools - Version 0.7
 
 # Seurat Object Quality Control function
 #' @name wookieqc
@@ -893,8 +893,59 @@ wookie_jaccardPlot <- function(seurat_obj,clusters = 'seurat_clusters',
   
 }
 
-
-
+# Function to get qc stats
+#' @name wookie_stats
+#' @title Function to get qc stats
+#' @import Seurat
+#' @description Function to get qc stats
+#' @param seurat_obj Seurat object
+#' @param counts default is 'nCount_RNA'
+#' @param features default is 'nFeature_RNA'
+#' @param mito default is 'percent.mt'
+#' @param ribo default is NULL
+#' @return stats df
+#' @export
+wookie_stats <- function(seurat_obj, counts = 'nCount_RNA', features = 'nFeature_RNA', mito = 'percent.mt', ribo = NULL) {
+  nc <- obj[[counts]]
+  nf <- obj[[features]]
+  pmt <- obj[[mito]]
+  
+  # Calculate mean, standard deviation, and variance for each value
+  nc_mean <- mean(nc)
+  nc_sd <- sd(nc)
+  nc_var <- var(nc)
+  
+  nf_mean <- mean(nf)
+  nf_sd <- sd(nf)
+  nf_var <- var(nf)
+  
+  pmt_mean <- mean(pmt)
+  pmt_sd <- sd(pmt)
+  pmt_var <- var(pmt)
+  
+  # Handle the case when ribo is NULL
+  if (!is.null(ribo)) {
+    ptr <- obj[[ribo]]
+    ptr_mean <- mean(ptr)
+    ptr_sd <- sd(ptr)
+    ptr_var <- var(ptr)
+    results_df <- data.frame(
+      Metric = c("nCount_RNA", "nFeature_RNA", "percent.mt", "percent.ribo"),
+      Mean = c(nc_mean, nf_mean, pmt_mean, ptr_mean),
+      SD = c(nc_sd, nf_sd, pmt_sd, ptr_sd),
+      Variance = c(nc_var, nf_var, pmt_var, ptr_var)
+    )
+  } else {
+    results_df <- data.frame(
+      Metric = c("nCount_RNA", "nFeature_RNA", "percent.mt"),
+      Mean = c(nc_mean, nf_mean, pmt_mean),
+      SD = c(nc_sd, nf_sd, pmt_sd),
+      Variance = c(nc_var, nf_var, pmt_var)
+    )
+  }
+  
+  return(results_df)
+}
 
 
 wookieSay <- function() {
@@ -927,9 +978,6 @@ wookieSay <- function() {
     "The circle is now complete. Your analysis has begun.",
     "You have controlled your Cell Ranger data. But you have allowed this Seurat... this Seurat to twist your mind.",
     "The data is strong with this one.",
-    "I find your lack of faith in single-cell analysis disturbing.",
-    "The Force will be with you. Always.",
-    "I'll never join you in your pursuit of batch effects!",
     "You've failed, Your Highness. I am a Jedi, like my father before me. I will not turn to the dark side of poor quality control.",
     "The Force is what gives a Jedi their power. It's an energy field created by all living cells that surrounds us, penetrates us, and binds the galaxy together.",
     "I've been waiting for you, Obi-Wan. We meet again, at last. The circle is now complete. When I left you, I was but the learner; now I am the master of single-cell analysis.",
@@ -938,110 +986,80 @@ wookieSay <- function() {
     "The fear of batch effects is the path to the dark side. Fear leads to anger, anger leads to hate, hate leads to suffering... in your data interpretation.",
     "May the Force guide your analysis, and your analysis guide the Force.",
     "In my experience, there's no such thing as too much quality control.",
-    "Normalization is the path to the dark side. Normalization leads to hate. Hate leads to suffering.",
     "Remember, a Jedi's strength flows from the cell cycle.",
     "Impressive. Most impressive. But you are not a master of single-cell analysis yet.",
-    "You have paid the price for your lack of vision regarding batch effects.",
-    "The Force is strong with this cluster, but you are not a Jedi yet.",
     "You were the chosen one! You were meant to balance the data, not leave it in darkness!",
     "I have brought peace, freedom, justice, and security to my single-cell experiment.",
     "You underestimate the power of the dark side... of batch effects.",
-    "I am a master of single-cell analysis, Darth Vader. I must not let myself be defeated.",
-    "Your hate has made you powerful. But I sense there is still good in you, young analyst.",
     "I'll try normalization. That's a good trick!",
-    "The Fear of Loss is a path to the dark side of data analysis.",
     "You're going to find that many of the truths we cling to depend greatly on our own point of view of the data.",
     "I've just about had enough of these Star Wars puns!",
-    "I don't believe what I'm hearing. Normalization leading to hate? That's insane!",
-    "You were supposed to bring balance to the data, not leave it in darkness!",
     "I fear nothing. For my data is all-powerful and you have lost my faith in single-cell analysis.",
     "Your journey towards the dark side of batch effects will be your undoing.",
-    "Help me, Obi-Wan Kenobi. You're my only hope for proper normalization.",
     "The Force is strong in your family of cell types.",
     "I have a bad feeling about this... quality of your data.",
     "Use the Force, Luke... and Seurat's integration tools.",
     "Your data has a good motivation... for normalization.",
     "You don't know the power of the dark side... of overclustering!",
-    "I find your lack of faith in single-cell analysis disturbing... and dangerous.",
     "You are unwise to lower your quality control thresholds.",
     "Ah, yes, the single-cell analyst... we have been expecting you.",
     "The data will decide your fate, not my bias.",
-    "The ability to identify rare cell types is insignificant next to the power of the Force... and good experimental design.",
     "I sense a disturbance in the data... as if millions of cells cried out in terror and were suddenly silenced.",
-    "You have controlled your Cell Ranger data, but you have allowed this Seurat... this Seurat to twist your mind.",
-    "I am a master of single-cell analysis, Anakin. I must not let myself be defeated by batch effects.",
     "The Force is what gives a Jedi their power. It's an energy field created by all living cells that surrounds us, penetrates us, and binds the galaxy together... and your data.",
     "Your focus determines your reality. Focus on the data, not on your fears of misinterpreting it... or batch effects.",
-    "The fear of batch effects is the path to the dark side. Fear leads to anger, anger leads to hate, hate leads to suffering... in your data interpretation and experimental design.",
-    "Remember, a Jedi's strength flows from the cell cycle... and proper normalization.",
-    "Impressive. Most impressive. But you are not a master of single-cell analysis yet... you still have much to learn.",
-    "You have paid the price for your lack of vision regarding batch effects... and quality control.",
-    "The Force is strong with this cluster, but you are not a Jedi yet... you must learn to trust your data.",
-    "I have brought peace, freedom, justice, and security to my single-cell experiment... through the power of the Force and good experimental design.",
-    "You underestimate the power of the dark side... of batch effects and overclustering.",
-    "I am a master of single-cell analysis, Darth Vader. I must not let myself be defeated by your lack of faith in the data.",
-    "Your hate has made you powerful. But I sense there is still good in you, young analyst... you must embrace the light side of proper normalization and quality control.",
-    "I'll try normalization. That's a good trick... but you must also master batch effect correction and data integration.",
-    "The Fear of Loss is a path to the dark side of data analysis... and poor experimental design.",
-    "You're going to find that many of the truths we cling to depend greatly on our own point of view of the data... and our biases.",
-    "I've just about had enough of these Star Wars puns... let's get back to the serious business of single-cell analysis!",
-    "I don't believe what I'm hearing. Normalization leading to hate? That's insane! Proper normalization is the path to enlightenment and accurate data interpretation.",
     "Cells! Thousands of them! I sense a disturbance in the data.",
     "You don't know the power of the dark side of dropout events.",
-    "I find your lack of faith in UMAP disturbing.",
-    "The Force is strong with this cluster, but it's no Jedi yet.",
-    "I've got a bad feeling about this... lack of quality control.",
     "These aren't the cell types you're looking for. *waves hand*",
     "Your hate for batch effects has made you powerful.",
-    "Use the Force, Luke... and Seurat's data integration tools.",
-    "The circle is now complete. Your single-cell analysis has begun.",
-    "I am one with the Force, and the Force is with me... and your single-cell data.",
     "Normalization is the path to the light side of data analysis.",
-    "You underestimate the power of the dark side... of overclustering!",
-    "I sense a disturbance in the data... as if millions of cells cried out in terror and were suddenly silenced.",
-    "Impressive. Most impressive. But you are not a master of single-cell analysis yet... you still have much to learn.",
-    "The Fear of Loss is a path to the dark side of data analysis... and poor experimental design.",
-    "I don't believe what I'm hearing. Normalization leading to hate? That's insane! Proper normalization is the path to enlightenment and accurate data interpretation.",
-    "You were supposed to bring balance to the data, not leave it in darkness!",
-    "The Force is what gives a Jedi their power. It's an energy field created by all living cells that surrounds us, penetrates us, and binds the galaxy together... and your data.",
-    "Your focus determines your reality. Focus on the data, not on your fears of misinterpreting it... or batch effects.",
-    "The fear of batch effects is the path to the dark side. Fear leads to anger, anger leads to hate, hate leads to suffering... in your data interpretation and experimental design.",
-    "Remember, a Jedi's strength flows from the cell cycle... and proper normalization.",
-    "You have paid the price for your lack of vision regarding batch effects... and quality control.",
-    "I have brought peace, freedom, justice, and security to my single-cell experiment... through the power of the Force and good experimental design.",
-    "I am a master of single-cell analysis, Darth Vader. I must not let myself be defeated by your lack of faith in the data.",
-    "Your hate has made you powerful. But I sense there is still good in you, young analyst... you must embrace the light side of proper normalization and quality control.",
-    "I'll try normalization. That's a good trick... but you must also master batch effect correction and data integration.",
-    "You're going to find that many of the truths we cling to depend greatly on our own point of view of the data... and our biases.",
     "I've just about had enough of these Star Wars puns... let's get back to the serious business of single-cell analysis!",
-    "The ability to identify rare cell types is insignificant next to the power of the Force... and good experimental design.",
-    "You have controlled your Cell Ranger data, but you have allowed this Seurat... this Seurat to twist your mind.",
-    "I am a master of single-cell analysis, Anakin. I must not let myself be defeated by batch effects.",
-    "The fear of batch effects is the path to the dark side. Fear leads to anger, anger leads to hate, hate leads to suffering... in your data interpretation and experimental design.",
-    "You underestimate the power of the dark side... of batch effects and overclustering.",
-    "I sense a disturbance in the data... as if millions of cells cried out in terror and were suddenly silenced... by poor quality control.",
-    "The Force is strong in your family of cell types... but you must learn to control your bias.",
-    "You don't know the power of the dark side... of overclustering and improper normalization!",
-    "Use the Force, Luke... and Seurat's powerful clustering algorithms.",
-    "I find your lack of faith in single-cell analysis disturbing... and dangerous for your scientific career.",
-    "You are unwise to lower your quality control thresholds... it leads to the dark side of data interpretation.",
-    "Ah, yes, the single-cell analyst... we have been expecting you to join the light side of proper normalization.",
-    "The data will decide your fate, not my bias... or my lack of proper experimental design.",
-    "I sense a disturbance in the data... as if millions of cells cried out in terror and were suddenly silenced... by batch effects.",
-    "You have controlled your Cell Ranger data, but you have allowed this Seurat... this Seurat to twist your mind... with improper clustering.",
-    "I am a master of single-cell analysis, Anakin. I must not let myself be defeated by batch effects... or your lack of faith in quality control.",
-    "The Force is what gives a Jedi their power. It's an energy field created by all living cells that surrounds us, penetrates us, and binds the galaxy together... and your data... and your experimental design.",
-    "Your focus determines your reality. Focus on the data, not on your fears of misinterpreting it... or batch effects... or improper normalization.",
-    "The fear of batch effects is the path to the dark side. Fear leads to anger, anger leads to hate, hate leads to suffering... in your data interpretation and experimental design... and your scientific career.",
-    "Remember, a Jedi's strength flows from the cell cycle... and proper normalization... and a good experimental design.",
-    "Impressive. Most impressive. But you are not a master of single-cell analysis yet... you still have much to learn... about batch effects, normalization, and quality control.",
-    "You have paid the price for your lack of vision regarding batch effects... and quality control... and proper experimental design.",
-    "The Force is strong with this cluster, but you are not a Jedi yet... you must learn to trust your data... and your experimental design.",
-    "I have brought peace, freedom, justice, and security to my single-cell experiment... through the power of the Force and good experimental design... and proper normalization.",
-    "You underestimate the power of the dark side... of batch effects and overclustering... and improper normalization.",
-    "I am a master of single-cell analysis, Darth Vader. I must not let myself be defeated by your lack of faith in the data... or your poor experimental design.",
-    "Your hate has made you powerful. But I sense there is still good in you, young analyst... you must embrace the light side of proper normalization and quality control... and a good experimental design.",
-    "This is not another star wars pun. *waves hand*"
+    "This is not another star wars pun. *waves hand*",
+    "May the Force of high-throughput sequencing be with you.",
+    "This is your destiny. Join me, and together, we can rule the galaxy of single-cell analysis.",
+    "In my experience, there’s no such thing as luck in single-cell transcriptomics.",
+    "Remember... the Force will be with you, always, and so will your flow cytometer.",
+    "Help me, Single-Cell Analyzer. You’re my only hope.",
+    "It's a trap! Beware of overfitting in your analysis.",
+    "The ability to destroy a planet is insignificant next to the power of the single-cell.",
+    "Use the Force, think creatively for novel cell type discovery.",
+    "A Jedi uses the Force for knowledge and defense, never for missing data.",
+    "Fear is the path to the dark side. Fear leads to bias, bias leads to skew, skew leads to misinterpretation in data analysis.",
+    "Your overclustering will be your undoing.",
+    "You were the chosen one! It was said that you would destroy the batch effects, not join them!",
+    "I sense much sequencing in you.",
+    "When nine hundred years old you reach, look as good your longitudinal data will not.",
+    "Much to learn, you still have. This is just the beginning of your single-cell journey.",
+    "The Force will be with you. Always. Especially in high-dimensional data analysis.",
+    "Size matters not. Look at me. Judge me by my cell size, do you?",
+    "Never tell me the odds of this stochastic analysis!",
+    "Let go of your redundant variables, and only then, a true model of the data you will see.",
+    "I have a good feeling about this hypothesis.",
+    "Difficult to see. Always in motion is the future of single-cell technologies.",
+    "Search your data. You know it to be clean.",
+    "Only a master of alignment can understand the true structure of the genome.",
+    "Let's keep the clonotypes balanced, as all things should be.",
+    "A Jedi seeks not these false discoveries.",
+    "Patience you must have, my young Padawan, to interpret these single-cell experiments.",
+    "A disturbance in the data, there is. Prepare to visualize!",
+    "Impressive. Most impressive. Your model has now conquered the dimensionality reduction challenge.",
+    "Your faith in your pipeline is your strength... and your weakness.",
+    "Heed the prophecy of cross-validation. Do not underestimate its power.",
+    "May your cluster resolution be fine and your cell identities clear.",
+    "Escape the dark side of inadequate sample sizes.",
+    "Yoda warned of the dark side: Overfitting, Batch Effects, and the dreaded Technical Variability.",
+    "Come to the single-cell side; we have the definitive resolution.",
+    "Rebellions are built on hope—and robust data analysis.",
+    "To defeat batch effects, into the normalization you must go.",
+    "The time to publish, it is. Ready your manuscripts we must!",
+    "Chewbacca might not understand RNA-seq, but he’d appreciate a good co-expression network.",
+    "Like the Millennium Falcon, your data’s journey through the analysis pipeline must be swift and sure.",
+    "MIDI-chlorians: the bioinformatics tools you are looking for.",
+    "Trust in the Force, but also in your control samples.",
+    "These are the significant results you are looking for. *waves hand*",
+    "Deploy the scatter plots and PCA, and prepare for the defense of your findings!",
+    "Not as clumsy or random as bulk sequencing; an elegant tool for a more civilized age—single-cell RNA-seq.",
+    "Rise, my friend. The data does not betray you—it makes you powerful!",
+    "If you strike this outlier down, I shall become more powerful than you could possibly imagine."
   )
     
  
