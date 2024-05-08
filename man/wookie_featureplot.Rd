@@ -30,7 +30,8 @@ wookie_featureplot(
   interactive = FALSE,
   combine = TRUE,
   raster = NULL,
-  raster.dpi = c(512, 512)
+  raster.dpi = c(512, 512),
+  silentwookie = FALSE
 )
 }
 \arguments{
@@ -85,6 +86,8 @@ wookie_featureplot(
 \item{raster}{Optional raster object for plotting}
 
 \item{raster.dpi}{Resolution for raster plotting}
+
+\item{silentwookie}{stop wookie from printing puns, default is FALSE}
 }
 \value{
 Plot grid

@@ -4,7 +4,7 @@
 \alias{wookie_annotate}
 \title{Function to plot cluster Similarity}
 \usage{
-wookie_annotate(object, marker_gene_list, threshold = 0)
+wookie_annotate(object, marker_gene_list, threshold = 0, silentwookie = FALSE)
 }
 \arguments{
 \item{object}{Seurat object}
@@ -12,6 +12,8 @@ wookie_annotate(object, marker_gene_list, threshold = 0)
 \item{marker_gene_list}{a nested list of marker genes,sub list names are used as labels}
 
 \item{threshold}{confidence score threshold to label a cell}
+
+\item{silentwookie}{stop wookie from printing puns, default is FALSE}
 }
 \value{
 object

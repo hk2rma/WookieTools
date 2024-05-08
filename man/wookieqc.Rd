@@ -16,7 +16,8 @@ wookie_qc(
   ptr_min = NULL,
   species = "Mouse",
   pt.size = NULL,
-  legend = TRUE
+  legend = TRUE,
+  silentwookie = FALSE
 )
 }
 \arguments{
@@ -33,6 +34,8 @@ wookie_qc(
 \item{species}{species in dataset Mouse or Human only ...}
 
 \item{pt.size}{data points in violin plot}
+
+\item{silentwookie}{stop wookie from printing puns, default is FALSE}
 
 \item{matrix}{Seurat object ...}
 

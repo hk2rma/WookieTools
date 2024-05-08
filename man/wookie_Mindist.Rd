@@ -9,7 +9,8 @@ wookie_Mindist(
   features = NULL,
   dims = 1:30,
   out_name = "min_dist_umaps",
-  reduction = "pca"
+  reduction = "pca",
+  silentwookie = FALSE
 )
 }
 \arguments{
@@ -22,6 +23,8 @@ wookie_Mindist(
 \item{out_name}{Name to assign to the combined plot}
 
 \item{reduction}{reduction for RunUMAP , deafult is 'pca'}
+
+\item{silentwookie}{stop wookie from printing puns, default is FALSE}
 }
 \value{
 Combined UMAP plot

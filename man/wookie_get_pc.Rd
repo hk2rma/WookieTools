@@ -4,12 +4,14 @@
 \alias{wookie_get_pc}
 \title{Get Optimal Number of PCs}
 \usage{
-wookie_get_pc(seurat_obj, reduction = "pca")
+wookie_get_pc(seurat_obj, reduction = "pca", silentwookie = FALSE)
 }
 \arguments{
 \item{seurat_obj}{Seurat Object}
 
 \item{reduction}{Type of reduction (e.g., 'pca')}
+
+\item{silentwookie}{stop wookie from printing puns, default is FALSE}
 }
 \value{
 Number of PCs to use

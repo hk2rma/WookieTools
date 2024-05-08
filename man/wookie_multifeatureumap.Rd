@@ -11,8 +11,12 @@ wookie_multifeatureumap(
   max_features = 3000,
   ftype = "HVG",
   step = 500,
-  out_name = "combined_umap"
+  out_name = "combined_umap",
+  silentwookie = FALSE
 )
+}
+\arguments{
+\item{silentwookie}{stop wookie from printing puns, default is FALSE}
 }
 \value{
 plot saved to global environment

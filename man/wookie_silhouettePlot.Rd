@@ -8,7 +8,8 @@ wookie_silhouettePlot(
   seurat,
   cluster = "seurat_clusters",
   dims = 1:30,
-  reduction = "pca"
+  reduction = "pca",
+  silentwookie = FALSE
 )
 }
 \arguments{
@@ -19,6 +20,8 @@ wookie_silhouettePlot(
 \item{dims}{dimension, default is 1:30}
 
 \item{reduction}{default is 'pca'}
+
+\item{silentwookie}{stop wookie from printing puns, default is FALSE}
 }
 \value{
 silhouette plot

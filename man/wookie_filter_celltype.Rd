@@ -4,7 +4,12 @@
 \alias{wookie_filter_celltype}
 \title{Filter particular cell types based on marker gene expression}
 \usage{
-wookie_filter_celltype(seurat_obj, marker_list, cutoff = 0.99)
+wookie_filter_celltype(
+  seurat_obj,
+  marker_list,
+  cutoff = 0.99,
+  silentwookie = FALSE
+)
 }
 \arguments{
 \item{seurat_obj}{Seurat object}
@@ -12,6 +17,8 @@ wookie_filter_celltype(seurat_obj, marker_list, cutoff = 0.99)
 \item{marker_list}{List of marker genes for the cell type to remove}
 
 \item{cutoff}{Quantile threshold (default: 0.99)}
+
+\item{silentwookie}{stop wookie from printing puns, default is FALSE}
 }
 \value{
 Filtered Seurat object

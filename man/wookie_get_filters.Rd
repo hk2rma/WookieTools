@@ -4,12 +4,14 @@
 \alias{wookie_get_filters}
 \title{Function to get qc filters}
 \usage{
-wookie_get_filters(seurat_obj, multiplier = 2)
+wookie_get_filters(seurat_obj, multiplier = 2, silentwookie = FALSE)
 }
 \arguments{
 \item{seurat_obj}{Seurat object}
 
 \item{multiplier}{default is 2 i.e 2 times SD}
+
+\item{silentwookie}{stop wookie from printing puns, default is FALSE}
 }
 \description{
 Function to get filters, to get data which lies between the mean and +/- multiplier value times SD of the distribution

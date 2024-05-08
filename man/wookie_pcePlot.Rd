@@ -11,7 +11,8 @@ wookie_pcePlot(
   dpi = 1080,
   height = 10,
   width = 10,
-  units = "cm"
+  units = "cm",
+  silentwookie = FALSE
 )
 }
 \arguments{
@@ -26,6 +27,8 @@ wookie_pcePlot(
 \item{width}{default is 10}
 
 \item{units}{deafults is 'cm'}
+
+\item{silentwookie}{stop wookie from printing puns, default is FALSE}
 
 \item{seurat_obj}{Seurat object}
 }

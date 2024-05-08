@@ -9,7 +9,8 @@ wookie_dotplot(
   feature_list,
   assay = "RNA",
   scale.by = "size",
-  tag = "DotPlot"
+  tag = "DotPlot",
+  silentwookie = FALSE
 )
 }
 \arguments{
@@ -22,6 +23,8 @@ wookie_dotplot(
 \item{scale.by}{scale.by}
 
 \item{tag}{plot title}
+
+\item{silentwookie}{stop wookie from printing puns, default is FALSE}
 }
 \value{
 Pdotplot

@@ -4,7 +4,12 @@
 \alias{wookie_matrix_qc}
 \title{Plot QC metrics of a sparse matrix}
 \usage{
-wookie_matrix_qc(count_matrix_sparse, fill_color = "#589FFF", title = "")
+wookie_matrix_qc(
+  count_matrix_sparse,
+  fill_color = "#589FFF",
+  title = "",
+  silentwookie = FALSE
+)
 }
 \arguments{
 \item{count_matrix_sparse}{Sparse matrix}
@@ -12,6 +17,8 @@ wookie_matrix_qc(count_matrix_sparse, fill_color = "#589FFF", title = "")
 \item{fill_color}{Plot color (default: #589FFF)}
 
 \item{title}{Title for the plot}
+
+\item{silentwookie}{stop wookie from printing puns, default is FALSE}
 }
 \value{
 QC plot

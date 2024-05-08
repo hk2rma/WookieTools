@@ -4,7 +4,13 @@
 \alias{wookie_fc_hist}
 \title{histograms of nFeature and nCounts}
 \usage{
-wookie_fc_hist(seurat_obj, title = "Histogram", fi = 0, ci = 0)
+wookie_fc_hist(
+  seurat_obj,
+  title = "Histogram",
+  fi = 0,
+  ci = 0,
+  silentwookie = FALSE
+)
 }
 \arguments{
 \item{seurat_obj}{Seurat Object}
@@ -14,6 +20,8 @@ wookie_fc_hist(seurat_obj, title = "Histogram", fi = 0, ci = 0)
 \item{fi}{features threshold}
 
 \item{ci}{counts threshold}
+
+\item{silentwookie}{stop wookie from printing puns, default is FALSE}
 }
 \value{
 plot

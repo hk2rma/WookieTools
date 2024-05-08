@@ -1,4 +1,4 @@
-# WookieTools - Version 0.8.1
+# WookieTools - Version 0.8.2
 
 # Seurat Object Quality Control function
 #' @name wookieqc
@@ -18,12 +18,13 @@
 #' @param species species in dataset Mouse or Human only ...
 #' @param colors Colors for facetting ...
 #' @param pt.size data points in violin plot
+#' @param silentwookie stop wookie from printing puns, default is FALSE
 #' @return Seurat object after quality control
 #' @export
 wookie_qc <- function(seurat_obj, nf_min = 0, nf_max = 20000,
                       nc_max = 200000, nc_min = 0, pmt = 20,
                       ptr_max = NULL, ptr_min = NULL, species = 'Mouse',
-                      pt.size = NULL, legend = TRUE) {
+                      pt.size = NULL, legend = TRUE,silentwookie = FALSE) {
   
   
   if (!inherits(seurat_obj, "Seurat")) {
@@ -92,7 +93,9 @@ wookie_qc <- function(seurat_obj, nf_min = 0, nf_max = 20000,
   
   # Display the combined plot
   print(combined_plot)
+  if(silentwookie == FALSE){
   wookieSay()
+  }
   return(seurat_obj)
   
   
@@ -112,10 +115,11 @@ wookie_qc <- function(seurat_obj, nf_min = 0, nf_max = 20000,
 #' @param sample sample/library name ...
 #' @param min_cells minimum number cells a gene is found in ...
 #' @param min_features minimum number of features found in a cell ...
+#' @param silentwookie stop wookie from printing puns, default is FALSE
 #' @return Summed and merged Seurat object
 #' @export
 wookie_matrix_sum <- function(matrix1, matrix2, sample = 'sample',
-                              min_cells = 3, min_features = 200) {
+                              min_cells = 3, min_features = 200,silentwookie = FALSE) {
   load_libraries()
   
   # Check if row names are identical
@@ -159,7 +163,9 @@ wookie_matrix_sum <- function(matrix1, matrix2, sample = 'sample',
   # Create Seurat object
   seu_obj <- CreateSeuratObject(result_matrix, min.cells = min_cells,
                                 min.features = min_features, project = sample)
-  wookieSay()
+  if (silentwookie == FALSE){
+    wookieSay()
+  }
   return(seu_obj)
 }
 
@@ -170,13 +176,14 @@ wookie_matrix_sum <- function(matrix1, matrix2, sample = 'sample',
 #' @import Seurat
 #' @import ggplot2
 #' @import cowplot
+#' @param silentwookie stop wookie from printing puns, default is FALSE
 #' @description plot multiple UMAP's for different numbers of a feature i.e Highly variable genes or Most Abundant genes ...
 #' @return plot saved to global environment
 #' @export
 wookie_multifeatureumap <- function(object = seu_obj, features = features,
                                     min.dist = 0.1, max_features = 3000,
                                     ftype='HVG',step = 500,
-                                    out_name = 'combined_umap') {
+                                    out_name = 'combined_umap',silentwookie = FALSE) {
   plot_list <- list()
   
   for (feature_length in seq(500, max_features, step)) {
@@ -194,7 +201,9 @@ wookie_multifeatureumap <- function(object = seu_obj, features = features,
   
   # Assign the combined plot to a variable in the global environment
   assign(out_name, combined_plot, envir = globalenv())
-  wookieSay()
+  if (silentwookie == FALSE){
+    wookieSay()
+  }
   # Return the combined plot
   return(combined_plot)
 }
@@ -212,10 +221,12 @@ wookie_multifeatureumap <- function(object = seu_obj, features = features,
 #' @param reduction reduction for RunUMAP , deafult is 'pca'
 #' @param dims Dimensions to use for UMAP
 #' @param out_name Name to assign to the combined plot
+#' @param silentwookie stop wookie from printing puns, default is FALSE
 #' @return Combined UMAP plot
 #' @export
 wookie_Mindist <- function(seurat_obj, features = NULL, dims = 1:30, 
-                                     out_name = 'min_dist_umaps',reduction = 'pca') {
+                                     out_name = 'min_dist_umaps',
+                           reduction = 'pca',silentwookie = FALSE) {
   plot_list <- list()
   
   for (min_dist in seq(0.1, 0.5, 0.1)) {
@@ -230,7 +241,9 @@ wookie_Mindist <- function(seurat_obj, features = NULL, dims = 1:30,
   
   combined_plot <- plot_grid(plotlist = plot_list)
   assign(out_name, combined_plot, envir = globalenv())
-  wookieSay()
+  if (silentwookie == FALSE){
+    wookieSay()
+  }
   return(combined_plot)
 }
 
@@ -266,6 +279,7 @@ wookie_Mindist <- function(seurat_obj, features = NULL, dims = 1:30,
 #' @param combine Whether to combine plots into a single grid
 #' @param raster Optional raster object for plotting
 #' @param raster.dpi Resolution for raster plotting
+#' @param silentwookie stop wookie from printing puns, default is FALSE
 #' @return Plot grid
 #' @export
 wookie_featureplot <- function(seuratObject, featureList, ncol = 3,
@@ -289,7 +303,7 @@ wookie_featureplot <- function(seuratObject, featureList, ncol = 3,
                   interactive = FALSE,
                   combine = TRUE,
                   raster = NULL,
-                  raster.dpi = c(512, 512)) {
+                  raster.dpi = c(512, 512),silentwookie = FALSE) {
   plotList <- lapply(featureList, function(feature) {
     FeaturePlot(object = seuratObject, features = feature, 
                 pt.size = pt.size,
@@ -321,7 +335,9 @@ wookie_featureplot <- function(seuratObject, featureList, ncol = 3,
   
   plotGrid <- plot_grid(plotlist = plotList, ncol = ncol, 
                         rel_widths = rep(1, length(featureList)))
-  wookieSay()
+  if (silentwookie == FALSE){
+    wookieSay()
+  }
   return(plotGrid)
 }
 
@@ -340,9 +356,10 @@ wookie_featureplot <- function(seuratObject, featureList, ncol = 3,
 #' @param seurat_obj Seurat object
 #' @param marker_list List of marker genes for the cell type to remove
 #' @param cutoff Quantile threshold (default: 0.99)
+#' @param silentwookie stop wookie from printing puns, default is FALSE
 #' @return Filtered Seurat object
 #' @export
-wookie_filter_celltype <- function(seurat_obj, marker_list, cutoff = 0.99) {
+wookie_filter_celltype <- function(seurat_obj, marker_list, cutoff = 0.99,silentwookie = FALSE) {
   print('Ensure marker genes are in RNA$scale.data')
   
   expression_matrix_transposed <- t(seurat_obj@assays$RNA$scale.data)
@@ -357,7 +374,9 @@ wookie_filter_celltype <- function(seurat_obj, marker_list, cutoff = 0.99) {
   seu_removed <- seurat_obj[, cellstoremove]
   print(paste0(length(cellstokeep), ' Cells kept, ', 
                length(cellstoremove), ' cells removed.'))
-  wookieSay()
+  if (silentwookie == FALSE){
+    wookieSay()
+  }
   return(seu_filtered)
 }
 
@@ -372,9 +391,11 @@ wookie_filter_celltype <- function(seurat_obj, marker_list, cutoff = 0.99) {
 #' @param count_matrix_sparse Sparse matrix
 #' @param fill_color Plot color (default: #589FFF)
 #' @param title Title for the plot
+#' @param silentwookie stop wookie from printing puns, default is FALSE
 #' @return QC plot
 #' @export
-wookie_matrix_qc <- function(count_matrix_sparse, fill_color = "#589FFF", title = "") {
+wookie_matrix_qc <- function(count_matrix_sparse, fill_color = "#589FFF", 
+                             title = "",silentwookie = FALSE) {
   reads_per_cell <- Matrix::colSums(count_matrix_sparse)
   genes_per_cell <- Matrix::colSums(count_matrix_sparse > 0)
   reads_per_gene <- Matrix::rowSums(count_matrix_sparse > 0)
@@ -416,7 +437,9 @@ wookie_matrix_qc <- function(count_matrix_sparse, fill_color = "#589FFF", title 
           panel.grid.minor = element_blank())
   
   plot_grid(p1, p2, p3, p4, ncol = 2) + ggtitle(title)
-  wookieSay()
+  if (silentwookie == FALSE){
+    wookieSay()
+  }
 }
 
 # Function to compare Log Normalisation and SCT (Histogram)
@@ -428,9 +451,10 @@ wookie_matrix_qc <- function(count_matrix_sparse, fill_color = "#589FFF", title 
 #' @import cowplot
 #' @description Compare Log Normalisation and SCT
 #' @param seurat_obj Seurat Object with both RNA and SCT assays
+#' @param silentwookie stop wookie from printing puns, default is FALSE
 #' @return Histogram comparing Log Normalisation and SCT
 #' @export
-wookie_ge_histogram <- function(seurat_obj) {
+wookie_ge_histogram <- function(seurat_obj,silentwookie = FALSE) {
   expression_data_RNA <- as.vector(seurat_obj[["SCT"]]@scale.data)
   expression_data_SCT <- as.vector(seurat_obj[["RNA"]]@scale.data)
   
@@ -454,7 +478,9 @@ wookie_ge_histogram <- function(seurat_obj) {
         add = TRUE, col = "blue", lwd = 2)
   
   par(mfrow = c(1, 1))
-  wookieSay()
+  if (silentwookie == FALSE){
+    wookieSay()
+  }
 }
 
 # Function to get optimal number of PCs
@@ -464,9 +490,10 @@ wookie_ge_histogram <- function(seurat_obj) {
 #' @description Get the optimal number of principal components to use
 #' @param seurat_obj Seurat Object
 #' @param reduction Type of reduction (e.g., 'pca')
+#' @param silentwookie stop wookie from printing puns, default is FALSE
 #' @return Number of PCs to use
 #' @export
-wookie_get_pc <- function(seurat_obj, reduction = 'pca') {
+wookie_get_pc <- function(seurat_obj, reduction = 'pca',silentwookie = FALSE) {
   pct <- seurat_obj[[reduction]]@stdev / sum(seurat_obj[[reduction]]@stdev) * 100
   cumu <- cumsum(pct)
   
@@ -475,7 +502,9 @@ wookie_get_pc <- function(seurat_obj, reduction = 'pca') {
               decreasing = TRUE)[1] + 1
   pcs <- min(col, co2)
   cat(paste0('No. of Optimal PCs: ',pcs))
+  if (silentwookie == FALSE){
   wookieSay()
+  }
 }
 
 
@@ -491,9 +520,10 @@ wookie_get_pc <- function(seurat_obj, reduction = 'pca') {
 #' @param title title of the plot
 #' @param fi features threshold
 #' @param ci counts threshold 
+#' @param silentwookie stop wookie from printing puns, default is FALSE
 #' @return plot
 #' @export
-wookie_fc_hist <- function(seurat_obj, title = 'Histogram', fi = 0, ci = 0) {
+wookie_fc_hist <- function(seurat_obj, title = 'Histogram', fi = 0, ci = 0,silentwookie = FALSE) {
   # Extract data
   data <- FetchData(seurat_obj, vars = c("nFeature_RNA", "nCount_RNA"))
   
@@ -508,7 +538,9 @@ wookie_fc_hist <- function(seurat_obj, title = 'Histogram', fi = 0, ci = 0) {
     geom_vline(xintercept = ci, color = "#FF0909", linetype = "dashed") +
     ggtitle(paste(title, "- Counts"))
   
-  wookieSay()
+  if (silentwookie == FALSE){
+    wookieSay()
+  }
   # Return combined plot for each seurat object
   return(p1 + p2 + plot_layout(ncol = 2))
   
@@ -526,14 +558,18 @@ wookie_fc_hist <- function(seurat_obj, title = 'Histogram', fi = 0, ci = 0) {
 #' @param feature_list List of markers
 #' @param tag plot title
 #' @param scale.by scale.by
+#' @param silentwookie stop wookie from printing puns, default is FALSE
 #' @return Pdotplot
 #' @export
-wookie_dotplot <- function(seurat_obj, feature_list , assay = 'RNA',scale.by = 'size', tag = 'DotPlot'){
+wookie_dotplot <- function(seurat_obj, feature_list , assay = 'RNA',
+                           scale.by = 'size', tag = 'DotPlot',silentwookie = FALSE){
   dp <- DotPlot(seurat_obj, features = feature_list, assay = assay,scale.by = scale.by) +
     coord_flip()+
     scale_color_gradientn(colours = c("#DCDCDC", "yellow", "orange", "red", "#8b0000"))+ 
     ggtitle(tag)
-  wookieSay()
+  if (silentwookie == FALSE){
+    wookieSay()
+  }
   return(dp)
 }
 
@@ -556,12 +592,14 @@ wookie_dotplot <- function(seurat_obj, feature_list , assay = 'RNA',scale.by = '
 #' @param height default is 10
 #' @param width default is 10
 #' @param units deafults is 'cm'
+#' @param silentwookie stop wookie from printing puns, default is FALSE
 #' @return p
 #' @export
 wookie_clustertree <- function(seurat_obj, dims = NULL, features = NULL, reorder = FALSE ,
                                reorder.numeric = FALSE, saveplot = FALSE,assay = 'RNA',
                                reduction = 'pca', slot = 'data',
-                               dpi = 1080, height = 10, width = 10, units = 'cm'){
+                               dpi = 1080, height = 10, width = 10, units = 'cm',
+                               silentwookie = FALSE){
   seurat <- BuildClusterTree(
     seurat_obj,
     dims = dims,
@@ -587,7 +625,9 @@ wookie_clustertree <- function(seurat_obj, dims = NULL, features = NULL, reorder
   if(saveplot == TRUE){
     ggsave('Cluster_tree.jpeg',p,width = width,height = height,dpi = dpi,units = units)
   }
-  wookieSay()
+  if (silentwookie == FALSE){
+    wookieSay()
+  }
   return(p)
   
 }
@@ -607,10 +647,12 @@ wookie_clustertree <- function(seurat_obj, dims = NULL, features = NULL, reorder
 #' @param height default is 10
 #' @param width default is 10
 #' @param units deafults is 'cm'
+#' @param silentwookie stop wookie from printing puns, default is FALSE
 #' @return pce_plot
 #' @export
 wookie_pcePlot <- function(seurat, seurat_clusters= 'seurat_clusters' ,
-  saveplot = FALSE,dpi = 1080, height = 10, width = 10, units = 'cm'){
+  saveplot = FALSE,dpi = 1080, height = 10, width = 10, units = 'cm',
+  silentwookie = FALSE){
   
   temp_labels <- seurat@meta.data %>%
     group_by(seurat_clusters) %>%
@@ -670,7 +712,9 @@ wookie_pcePlot <- function(seurat, seurat_clusters= 'seurat_clusters' ,
       height = height, width = width,
       dpi = dpi,units = units)
     }
-    wookieSay()
+    if (silentwookie == FALSE){
+      wookieSay()
+    }
     return(pce_plot)
     
 }
@@ -687,9 +731,11 @@ wookie_pcePlot <- function(seurat, seurat_clusters= 'seurat_clusters' ,
 #' @param cluster default is 'seurat_clusters'
 #' @param dims dimension, default is 1:30
 #' @param reduction default is 'pca'
+#' @param silentwookie stop wookie from printing puns, default is FALSE
 #' @return silhouette plot
 #' @export
-wookie_silhouettePlot <- function(seurat,cluster = 'seurat_clusters',dims = 1:30,reduction = 'pca'){
+wookie_silhouettePlot <- function(seurat,cluster = 'seurat_clusters',dims = 1:30,
+                                  reduction = 'pca',silentwookie = FALSE){
   seurat$seurat_clusters <- seurat[[cluster]]
   distance_matrix <- dist(Embeddings(seurat[[reduction]])[, dims])
   clusters <- seurat@meta.data$seurat_clusters
@@ -724,7 +770,9 @@ wookie_silhouettePlot <- function(seurat,cluster = 'seurat_clusters',dims = 1:30
       angle = 90,
       size = 3
     )
-  wookieSay()
+  if (silentwookie == FALSE){
+    wookieSay()
+  }
   return(silhouette_plot)
   
 }
@@ -743,9 +791,11 @@ wookie_silhouettePlot <- function(seurat,cluster = 'seurat_clusters',dims = 1:30
 #' @param clusters default is 'seurat_clusters'
 #' @param dims dimension, default is 1:30
 #' @param reduction default is 'PCA'
+#' @param silentwookie stop wookie from printing puns, default is FALSE
 #' @return cluster Similarity heatmap
 #' @export
-wookie_clusterSimilarityPlot <- function(seurat_obj,dims = 1:30,clusters = 'seurat_clusters',reduction = 'PCA'){
+wookie_clusterSimilarityPlot <- function(seurat_obj,dims = 1:30,clusters = 'seurat_clusters',
+                                         reduction = 'PCA',silentwookie = FALSE){
   seurat_obj$seurat_clusters <- seurat_obj[[clusters]]
   sce <- as.SingleCellExperiment(seurat_obj)
   reducedDim(sce, 'PCA_sub') <- reducedDim(sce, 'PCA')[,dims, drop = FALSE]
@@ -784,7 +834,9 @@ wookie_clusterSimilarityPlot <- function(seurat_obj,dims = 1:30,clusters = 'seur
       legend.position = 'right',
       panel.grid.major = element_blank()
    )
-  wookieSay()
+  if (silentwookie == FALSE){
+    wookieSay()
+  }
   return(clus_similarity_Plot)
 }
 
@@ -812,6 +864,7 @@ wookie_clusterSimilarityPlot <- function(seurat_obj,dims = 1:30,clusters = 'seur
 #' @param dpi Resolution of the saved plot, default is 700
 #' @param units Units for the plot dimensions, default is 'cm'
 #' @param limitsize Boolean indicating whether to limit the size of the plot, default is FALSE
+#' @param silentwookie stop wookie from printing puns, default is FALSE
 #' @return plot Jaccard similarity index
 #' @export
 wookie_jaccardPlot <- function(seurat_obj,clusters = 'seurat_clusters',
@@ -824,7 +877,8 @@ wookie_jaccardPlot <- function(seurat_obj,clusters = 'seurat_clusters',
                                title = 'Wookie_Jaccard',
                                saveplot = FALSE,
                                height = 10, width = 10,
-                               dpi = 700,units = 'cm',limitsize = FALSE){
+                               dpi = 700,units = 'cm',limitsize = FALSE,
+                               silentwookie = FALSE){
   
   seurat_obj$seurat_clusters <- seurat_obj[[clusters]]
   Idents(seurat_obj) <- seurat_obj@meta.data$seurat_clusters
@@ -889,7 +943,9 @@ wookie_jaccardPlot <- function(seurat_obj,clusters = 'seurat_clusters',
            height = height, width = width,
            dpi = dpi,units = units,limitsize = limitsize)
   }
-  wookieSay()
+  if (silentwookie == FALSE){
+    wookieSay()
+  }
   return(js_plot)
   
 }
@@ -901,8 +957,9 @@ wookie_jaccardPlot <- function(seurat_obj,clusters = 'seurat_clusters',
 #' @description Function to get filters, to get data which lies between the mean and +/- multiplier value times SD of the distribution 
 #' @param seurat_obj Seurat object
 #' @param multiplier default is 2 i.e 2 times SD
+#' @param silentwookie stop wookie from printing puns, default is FALSE
 #' @export
-wookie_get_filters <- function(seurat_obj, multiplier = 2){
+wookie_get_filters <- function(seurat_obj, multiplier = 2,silentwookie = FALSE){
   ## Get filtering parameters
   count.max <- round(mean(seurat_obj$nCount_RNA) +
                        multiplier * sd(seurat_obj$nCount_RNA), digits = -2)
@@ -927,7 +984,9 @@ wookie_get_filters <- function(seurat_obj, multiplier = 2){
   }
   print(paste0(count.min, ' < nCount_RNA < ', count.max))
   print(paste0(feat.min, ' < nFeature_RNA < ', feat.max))
-  wookieSay()
+  if (silentwookie == FALSE){
+    wookieSay()
+  }
 }
 
 # Function to annotate cells given a nested list of marker genes
@@ -943,9 +1002,10 @@ wookie_get_filters <- function(seurat_obj, multiplier = 2){
 #' @param object Seurat object
 #' @param marker_gene_list a nested list of marker genes,sub list names are used as labels
 #' @param threshold confidence score threshold to label a cell
+#' @param silentwookie stop wookie from printing puns, default is FALSE
 #' @return object
 #' @export
-wookie_annotate <- function(object, marker_gene_list, threshold = 0) {
+wookie_annotate <- function(object, marker_gene_list, threshold = 0,silentwookie = FALSE) {
   # Score cells based on marker gene sets
   object <- AddModuleScore(
     object = object,
@@ -1033,7 +1093,9 @@ wookie_annotate <- function(object, marker_gene_list, threshold = 0) {
   plot2 <- plot_grid(pclus,plab1,plab2,ncol = 3)
   combined_plot <- plot_grid(plot1,plot2,ncol = 1)
   print(combined_plot)
-  wookieSay()
+  if (silentwookie == FALSE){
+    wookieSay()
+  }
   return(object)
 }
 

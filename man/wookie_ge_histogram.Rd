@@ -4,10 +4,12 @@
 \alias{wookie_ge_histogram}
 \title{Compare Log Normalisation and SCT (Histogram)}
 \usage{
-wookie_ge_histogram(seurat_obj)
+wookie_ge_histogram(seurat_obj, silentwookie = FALSE)
 }
 \arguments{
 \item{seurat_obj}{Seurat Object with both RNA and SCT assays}
+
+\item{silentwookie}{stop wookie from printing puns, default is FALSE}
 }
 \value{
 Histogram comparing Log Normalisation and SCT

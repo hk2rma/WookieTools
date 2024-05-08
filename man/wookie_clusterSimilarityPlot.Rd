@@ -8,7 +8,8 @@ wookie_clusterSimilarityPlot(
   seurat_obj,
   dims = 1:30,
   clusters = "seurat_clusters",
-  reduction = "PCA"
+  reduction = "PCA",
+  silentwookie = FALSE
 )
 }
 \arguments{
@@ -19,6 +20,8 @@ wookie_clusterSimilarityPlot(
 \item{clusters}{default is 'seurat_clusters'}
 
 \item{reduction}{default is 'PCA'}
+
+\item{silentwookie}{stop wookie from printing puns, default is FALSE}
 }
 \value{
 cluster Similarity heatmap

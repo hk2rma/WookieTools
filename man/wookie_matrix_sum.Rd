@@ -9,7 +9,8 @@ wookie_matrix_sum(
   matrix2,
   sample = "sample",
   min_cells = 3,
-  min_features = 200
+  min_features = 200,
+  silentwookie = FALSE
 )
 }
 \arguments{
@@ -22,6 +23,8 @@ wookie_matrix_sum(
 \item{min_cells}{minimum number cells a gene is found in ...}
 
 \item{min_features}{minimum number of features found in a cell ...}
+
+\item{silentwookie}{stop wookie from printing puns, default is FALSE}
 }
 \value{
 Summed and merged Seurat object

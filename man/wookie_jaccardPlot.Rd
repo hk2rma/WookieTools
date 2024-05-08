@@ -19,7 +19,8 @@ wookie_jaccardPlot(
   width = 10,
   dpi = 700,
   units = "cm",
-  limitsize = FALSE
+  limitsize = FALSE,
+  silentwookie = FALSE
 )
 }
 \arguments{
@@ -52,6 +53,8 @@ wookie_jaccardPlot(
 \item{units}{Units for the plot dimensions, default is 'cm'}
 
 \item{limitsize}{Boolean indicating whether to limit the size of the plot, default is FALSE}
+
+\item{silentwookie}{stop wookie from printing puns, default is FALSE}
 }
 \value{
 plot Jaccard similarity index
