@@ -1,4 +1,4 @@
-# WookieTools - Version 0.8
+# WookieTools - Version 0.8.1
 
 # Seurat Object Quality Control function
 #' @name wookieqc
@@ -1016,7 +1016,7 @@ wookie_annotate <- function(object, marker_gene_list, threshold = 0) {
                            title = "Confidence Score Distributions per Cell Type")
   
   pclus <- ggplot(object@meta.data,
-                  aes(x = seurat_clusters, y = wookie_celltype,
+                  aes(x = seurat_clusters, y = wookie_confidence,
                       fill = seurat_clusters)) + geom_boxplot() +
     theme_minimal() + 
     labs(x = "Cluster",y = "Confidence Score",
