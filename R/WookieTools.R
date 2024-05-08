@@ -1,4 +1,4 @@
-# WookieTools - Version 0.7
+# WookieTools - Version 0.8
 
 # Seurat Object Quality Control function
 #' @name wookieqc
@@ -209,18 +209,19 @@ wookie_multifeatureumap <- function(object = seu_obj, features = features,
 #' @description Plot UMAPs for different min.dist values
 #' @param seurat_obj Seurat object
 #' @param features Features to use for UMAP
+#' @param reduction reduction for RunUMAP , deafult is 'pca'
 #' @param dims Dimensions to use for UMAP
 #' @param out_name Name to assign to the combined plot
 #' @return Combined UMAP plot
 #' @export
 wookie_Mindist <- function(seurat_obj, features = NULL, dims = 1:30, 
-                                     out_name = 'min_dist_umaps') {
+                                     out_name = 'min_dist_umaps',reduction = 'pca') {
   plot_list <- list()
   
   for (min_dist in seq(0.1, 0.5, 0.1)) {
     cat(paste0('Calculating UMAP at min.dist:', min_dist, '...'))
     current_umap <- RunUMAP(seurat_obj, features = features,
-                            dims = dims, min.dist = min_dist)
+                            dims = dims, min.dist = min_dist,reduction = reduction)
     current_plot <- DimPlot(current_umap, reduction = 'umap') + 
                           ggtitle(paste('UMAP: min.dist:', min_dist))
     plot_list[[length(plot_list) + 1]] <- current_plot
@@ -675,20 +676,20 @@ wookie_pcePlot <- function(seurat, seurat_clusters= 'seurat_clusters' ,
 }
 
 
-# Function to plot silhoutte scores
-#' @name wookie_silhouttePlot
-#' @title Function to plot silhoutte scores for each cluster
+# Function to plot silhouette scores
+#' @name wookie_silhouettePlot
+#' @title Function to plot silhouette scores for each cluster
 #' @import Seurat
 #' @import ggplot2
 #' @import cluster
-#' @description Function to plot silhoutte scores for each cluster
+#' @description Function to plot silhouette scores for each cluster
 #' @param seurat Seurat object
 #' @param cluster default is 'seurat_clusters'
 #' @param dims dimension, default is 1:30
 #' @param reduction default is 'pca'
-#' @return silhoutte plot
+#' @return silhouette plot
 #' @export
-wookie_silhouttePlot <- function(seurat,cluster = 'seurat_clusters',dims = 1:30,reduction = 'pca'){
+wookie_silhouettePlot <- function(seurat,cluster = 'seurat_clusters',dims = 1:30,reduction = 'pca'){
   seurat$seurat_clusters <- seurat[[cluster]]
   distance_matrix <- dist(Embeddings(seurat[[reduction]])[, dims])
   clusters <- seurat@meta.data$seurat_clusters
@@ -697,7 +698,7 @@ wookie_silhouttePlot <- function(seurat,cluster = 'seurat_clusters',dims = 1:30,
   
   mean_silhouette_score <- mean(seurat@meta.data$silhouette_score)
   
-  silhoutte_plot <- seurat@meta.data %>%
+  silhouette_plot <- seurat@meta.data %>%
     mutate(barcode = rownames(.)) %>%
     arrange(seurat_clusters,-silhouette_score) %>%
     mutate(barcode = factor(barcode, levels = barcode)) %>%
@@ -724,7 +725,7 @@ wookie_silhouttePlot <- function(seurat,cluster = 'seurat_clusters',dims = 1:30,
       size = 3
     )
   wookieSay()
-  return(silhoutte_plot)
+  return(silhouette_plot)
   
 }
 
@@ -894,57 +895,146 @@ wookie_jaccardPlot <- function(seurat_obj,clusters = 'seurat_clusters',
 }
 
 # Function to get qc stats
-#' @name wookie_stats
-#' @title Function to get qc stats
+#' @name wookie_get_filters
+#' @title Function to get qc filters
 #' @import Seurat
-#' @description Function to get qc stats
+#' @description Function to get filters, to get data which lies between the mean and +/- multiplier value times SD of the distribution 
 #' @param seurat_obj Seurat object
-#' @param counts default is 'nCount_RNA'
-#' @param features default is 'nFeature_RNA'
-#' @param mito default is 'percent.mt'
-#' @param ribo default is NULL
-#' @return stats df
+#' @param multiplier default is 2 i.e 2 times SD
 #' @export
-wookie_stats <- function(seurat_obj, counts = 'nCount_RNA', features = 'nFeature_RNA', mito = 'percent.mt', ribo = NULL) {
-  nc <- obj[[counts]]
-  nf <- obj[[features]]
-  pmt <- obj[[mito]]
+wookie_get_filters <- function(seurat_obj, multiplier = 2){
+  ## Get filtering parameters
+  count.max <- round(mean(seurat_obj$nCount_RNA) +
+                       multiplier * sd(seurat_obj$nCount_RNA), digits = -2)
+  count.min <- round(mean(seurat_obj$nCount_RNA) - 
+                       multiplier * sd(seurat_obj$nCount_RNA), digits = -2)
+  feat.max <- round(mean(seurat_obj$nFeature_RNA) + 
+                      multiplier * sd(seurat_obj$nFeature_RNA), digits = -2)
+  feat.min <- round(mean(seurat_obj$nFeature_RNA) - 
+                      multiplier * sd(seurat_obj$nFeature_RNA), digits = -2)
   
-  # Calculate mean, standard deviation, and variance for each value
-  nc_mean <- mean(nc)
-  nc_sd <- sd(nc)
-  nc_var <- var(nc)
-  
-  nf_mean <- mean(nf)
-  nf_sd <- sd(nf)
-  nf_var <- var(nf)
-  
-  pmt_mean <- mean(pmt)
-  pmt_sd <- sd(pmt)
-  pmt_var <- var(pmt)
-  
-  # Handle the case when ribo is NULL
-  if (!is.null(ribo)) {
-    ptr <- obj[[ribo]]
-    ptr_mean <- mean(ptr)
-    ptr_sd <- sd(ptr)
-    ptr_var <- var(ptr)
-    results_df <- data.frame(
-      Metric = c("nCount_RNA", "nFeature_RNA", "percent.mt", "percent.ribo"),
-      Mean = c(nc_mean, nf_mean, pmt_mean, ptr_mean),
-      SD = c(nc_sd, nf_sd, pmt_sd, ptr_sd),
-      Variance = c(nc_var, nf_var, pmt_var, ptr_var)
-    )
+  ## Set minimum parameters to 0 if negative value
+  if (count.min < 0){
+    count.min <- 0
   } else {
-    results_df <- data.frame(
-      Metric = c("nCount_RNA", "nFeature_RNA", "percent.mt"),
-      Mean = c(nc_mean, nf_mean, pmt_mean),
-      SD = c(nc_sd, nf_sd, pmt_sd),
-      Variance = c(nc_var, nf_var, pmt_var)
-    )
+    count.min <- count.min
   }
   
-  return(results_df)
+  if (feat.min < 0){
+    feat.min <- 0
+  } else {
+    feat.min <- feat.min
+  }
+  print(paste0(count.min, ' < nCount_RNA < ', count.max))
+  print(paste0(feat.min, ' < nFeature_RNA < ', feat.max))
+  wookieSay()
+}
+
+# Function to annotate cells given a nested list of marker genes
+#' @name wookie_annotate
+#' @title Function to plot cluster Similarity
+#' @import Seurat
+#' @import viridis
+#' @import ggridges
+#' @import future.apply
+#' @import reshape2
+#' @import cowplot
+#' @description Function to annotate cells given a nested list of marker genes,sub list names are used as labels
+#' @param object Seurat object
+#' @param marker_gene_list a nested list of marker genes,sub list names are used as labels
+#' @param threshold confidence score threshold to label a cell
+#' @return object
+#' @export
+wookie_annotate <- function(object, marker_gene_list, threshold = 0) {
+  # Score cells based on marker gene sets
+  object <- AddModuleScore(
+    object = object,
+    features = marker_gene_list,
+    ctrl = 100,
+    name = "marker_score"
+  )
+  
+  # Annotate cells based on the highest combined marker score
+  cell_annotations <- t(apply(
+    object@meta.data[, grepl("marker_score", colnames(object@meta.data))], 1,
+    function(x) {
+      sorted_scores <- sort(x, decreasing = TRUE)
+      annotation <- names(marker_gene_list)[which.max(x)]
+      max_score <- sorted_scores[1]
+      second_max_score <- ifelse(length(sorted_scores) > 1, sorted_scores[2], 0)
+      
+      # Ensure positive values for the normalization
+      max_score <- max(max_score, 0)
+      second_max_score <- max(second_max_score, 0)
+      
+      confidence <- ifelse(max_score == 0 && second_max_score == 0, 0,
+                           (max_score - second_max_score) / (max_score + second_max_score)
+      )
+      confidence <- max(min(confidence, 1), 0) # Ensure range [0, 1]
+      
+      annotation <- ifelse(confidence >= threshold, names(marker_gene_list)[which.max(x)], NA)
+      return(c(annotation, confidence))
+    }
+  ))
+  
+  # Add cell annotations and confidence scores to the Seurat object
+  object$wookie_celltype <- cell_annotations[, 1]
+  object$wookie_confidence <- as.numeric(cell_annotations[, 2])
+  
+  # Calculate average confidence scores per cluster
+  avg_confidence_per_cluster <- aggregate(
+    object$wookie_confidence ~ object$seurat_clusters,
+    FUN = mean,
+    data = object@meta.data
+  )
+  names(avg_confidence_per_cluster) <- c("Cluster", "Confidence")
+  
+  # Calculate average confidence scores per label
+  avg_confidence_per_label <- aggregate(
+    object$wookie_confidence ~ object$wookie_celltype,
+    FUN = mean,
+    data = object@meta.data
+  )
+  names(avg_confidence_per_label) <- c("Label", "Confidence")
+  
+  # Plot cell type annotations
+  plot_annotations <- DimPlot(object, group.by = 'wookie_celltype',
+                              pt.size = 2, label = TRUE)
+  
+  # Plot confidence scores
+  plot_confidence <- FeaturePlot(object, 'wookie_confidence') +
+    scale_color_gradientn(colours = viridis(5))
+  
+  
+  plot1 <- plot_annotations + plot_confidence
+  
+  plab1 <- ggplot(object@meta.data, 
+                  aes(x = wookie_confidence,y = wookie_celltype,
+                      fill = wookie_celltype))+ geom_density_ridges() +
+    theme_minimal() + labs(x = "Confidence Score", 
+                           y = "Cell Type",
+                           title = "Confidence Score Distributions per Cell Type")
+  
+  pclus <- ggplot(object@meta.data,
+                  aes(x = seurat_clusters, y = wookie_celltype,
+                      fill = seurat_clusters)) + geom_boxplot() +
+    theme_minimal() + 
+    labs(x = "Cluster",y = "Confidence Score",
+         title = "Confidence Scores per Cluster")
+  
+  plab2 <- ggplot(object@meta.data,
+                  aes(x = wookie_celltype, y = wookie_confidence,
+                      color = wookie_celltype)) + geom_jitter(width = 0.2,
+                                                             height = 0, alpha = 0.5) +  theme_minimal() +
+    labs(x = "Cell Type", y = "Confidence Score",
+         title = "Confidence Scores per Cell Type")
+  
+  
+  plot2 <- plot_grid(pclus,plab1,plab2,ncol = 3)
+  combined_plot <- plot_grid(plot1,plot2,ncol = 1)
+  print(combined_plot)
+  wookieSay()
+  return(object)
 }
 
 

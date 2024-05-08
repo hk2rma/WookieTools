@@ -8,7 +8,8 @@ wookie_Mindist(
   seurat_obj,
   features = NULL,
   dims = 1:30,
-  out_name = "min_dist_umaps"
+  out_name = "min_dist_umaps",
+  reduction = "pca"
 )
 }
 \arguments{
@@ -19,6 +20,8 @@ wookie_Mindist(
 \item{dims}{Dimensions to use for UMAP}
 
 \item{out_name}{Name to assign to the combined plot}
+
+\item{reduction}{reduction for RunUMAP , deafult is 'pca'}
 }
 \value{
 Combined UMAP plot
