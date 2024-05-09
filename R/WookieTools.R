@@ -1,4 +1,4 @@
-# WookieTools - Version 0.8.2
+# WookieTools - Version 0.8.3
 
 # Seurat Object Quality Control function
 #' @name wookieqc
@@ -99,74 +99,6 @@ wookie_qc <- function(seurat_obj, nf_min = 0, nf_max = 20000,
   return(seurat_obj)
   
   
-}
-
-# Function to sum the counts of two matrices containing the same cells
-# Input: Count Matrices | Output: Seurat Object
-#' @name wookie_matrix_sum
-#' @title Matrix Sum function
-#' @import Matrix
-#' @import dplyr
-#' @import tidyr
-#' @import patchwork
-#' @description Merge two count matrices, where the cells are the same, to obtain a single seurat object with the counts from two matrices summed for each cell ...
-#' @param matrix1 count matrix ...
-#' @param matrix2 count matrix ...
-#' @param sample sample/library name ...
-#' @param min_cells minimum number cells a gene is found in ...
-#' @param min_features minimum number of features found in a cell ...
-#' @param silentwookie stop wookie from printing puns, default is FALSE
-#' @return Summed and merged Seurat object
-#' @export
-wookie_matrix_sum <- function(matrix1, matrix2, sample = 'sample',
-                              min_cells = 3, min_features = 200,silentwookie = FALSE) {
-  load_libraries()
-  
-  # Check if row names are identical
-  if (!identical(rownames(matrix1), rownames(matrix2))) {
-    stop('Error: Row names are not identical.')
-  }
-  # Check if Column names are identical
-  if (!identical(rownames(matrix1), rownames(matrix2))) {
-    print(paste0('Warning: Column names are not identical.'))
-  }
-  # Identify columns not common to both matrices
-  extra_cols_matrix1 <- setdiff(colnames(matrix1), colnames(matrix2))
-  extra_cols_matrix2 <- setdiff(colnames(matrix2), colnames(matrix1))
-  
-  common_rows <- intersect(rownames(matrix1), rownames(matrix2))
-  common_cols <- intersect(colnames(matrix1), colnames(matrix2))
-  
-  # Subset matrices to common rows and columns
-  matrix1_common <- matrix1[which(rownames(matrix1) %in% common_rows),
-                            which(colnames(matrix1) %in% common_cols)]
-  matrix2_common <- matrix2[which(rownames(matrix2) %in% common_rows), 
-                            which(colnames(matrix2) %in% common_cols)]
-  
-  # Sum the matrices
-  result_matrix <- matrix1_common + matrix2_common
-  
-  # Concatenate extra columns to the right of the result matrix
-  if (length(extra_cols_matrix1) > 0) {
-    matrix1_uncommon <- matrix1[common_rows,extra_cols_matrix1]
-    result_matrix <- cbind(result_matrix, matrix1_uncommon)
-  }
-  
-  if (length(extra_cols_matrix2) > 0) {
-    matrix2_uncommon <- matrix2[common_rows,extra_cols_matrix2]
-    result_matrix <- cbind(result_matrix, matrix2_uncommon)
-  }
-  
-  original_col_order <- c(colnames(matrix1), extra_cols_matrix2)
-  result_matrix <- result_matrix[, original_col_order]
-  
-  # Create Seurat object
-  seu_obj <- CreateSeuratObject(result_matrix, min.cells = min_cells,
-                                min.features = min_features, project = sample)
-  if (silentwookie == FALSE){
-    wookieSay()
-  }
-  return(seu_obj)
 }
 
 # Function to run and plot multiple UMAP's for different numbers of a feature(Highly variable genes or Most Abundant genes)
@@ -1058,8 +990,7 @@ wookie_annotate <- function(object, marker_gene_list, threshold = 0,silentwookie
   names(avg_confidence_per_label) <- c("Label", "Confidence")
   
   # Plot cell type annotations
-  plot_annotations <- DimPlot(object, group.by = 'wookie_celltype',
-                              pt.size = 2, label = TRUE)
+  plot_annotations <- DimPlot(object, group.by = 'wookie_celltype', label = TRUE)
   
   # Plot confidence scores
   plot_confidence <- FeaturePlot(object, 'wookie_confidence') +
