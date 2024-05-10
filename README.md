@@ -1,5 +1,5 @@
 Wookie Tools
-Version 0.8.3
+Version 0.8.4
 
 Handy Tools for Single Cell RNA-Seq Analysis
 

@@ -31,7 +31,8 @@ wookie_featureplot(
   combine = TRUE,
   raster = NULL,
   raster.dpi = c(512, 512),
-  silentwookie = FALSE
+  silentwookie = FALSE,
+  cells = NULL
 )
 }
 \arguments{

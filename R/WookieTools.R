@@ -1,4 +1,4 @@
-# WookieTools - Version 0.8.3
+# WookieTools - Version 0.8.4
 
 # Seurat Object Quality Control function
 #' @name wookieqc
@@ -235,7 +235,7 @@ wookie_featureplot <- function(seuratObject, featureList, ncol = 3,
                   interactive = FALSE,
                   combine = TRUE,
                   raster = NULL,
-                  raster.dpi = c(512, 512),silentwookie = FALSE) {
+                  raster.dpi = c(512, 512),silentwookie = FALSE,cells = NULL) {
   plotList <- lapply(featureList, function(feature) {
     FeaturePlot(object = seuratObject, features = feature, 
                 pt.size = pt.size,
@@ -260,7 +260,7 @@ wookie_featureplot <- function(seuratObject, featureList, ncol = 3,
                 interactive = interactive,
                 combine = combine,
                 raster = raster,
-                raster.dpi = raster.dpi,) +
+                raster.dpi = raster.dpi,cells = cells) +
       theme(aspect.ratio = 1) +
       scale_color_gradientn(colours = c("#DCDCDC", "yellow", "orange", "red", "#8b0000"))
   })
@@ -1142,11 +1142,53 @@ wookieSay <- function() {
     "Deploy the scatter plots and PCA, and prepare for the defense of your findings!",
     "Not as clumsy or random as bulk sequencing; an elegant tool for a more civilized age—single-cell RNA-seq.",
     "Rise, my friend. The data does not betray you—it makes you powerful!",
-    "If you strike this outlier down, I shall become more powerful than you could possibly imagine."
+    "If you strike this outlier down, I shall become more powerful than you could possibly imagine.",
+    "Not all who wander are lost cells.",
+    "One cell type to rule them all, one cell type to find them, one cell type to bring them all and in the darkness bin them.",
+    "I am no cell biologist... but I curse with isocluster distance and with clusters unbinned! I am the purifier, the re-clusterer that batches were not meant to... cluster.",
+    "There is always hope for integrated, batch-corrected data.",
+    "It's a dangerous business, going out into experimental batches. You step into one little pool of technical variability, and if you don't keep your feet, there is no knowing where you might be swept off to.",
+    "The data must be taken deep into Mordor and cast back into the fiery chasm from whence it came!",
+    "My dear Frodos and Aragorns, hobbits really are amazing creatures. You can drop them into experimental batches, forget to normalize them for ages, and they'll just keep on growing.",
+    "I will draw you, single cells of Gondor!",
+    "There is some good in this world, Mr. Frodo... and it's worth fighting for with robust analytical methods.",
+    "Shall I describe it to you? Or would you like me to find you a box of high-quality, batch-corrected data?",
+    "The data is all?",
+    "I am no QC-engineer, to thwart so monstrous a misexpression of cells. This is a single-cell tactic.",
+    "One dataset to rule them all, one dataset to find them, one dataset to bring them all and in the darkness bin them.",
+    "My precious...cells! We must get the precious single-cell data to Mordor and destroy it!",
+    "Cast it into the fire! Destroy the batch effect!",
+    "You shall not pass...this quality filter!",
+    "A wizard is never late, nor is he early. He integrates datasets precisely when he means to.",
+    "The courtesy of your hall is somewhat lessened of late, Theoden King...as are your quality control metrics.",
+    "Faithless is he that says farewell when the road darkens...but let him not vow to filter only the easy cells.",
+    "All we have to decide is what to do with the time that is given us...by our scRNA-seq data.",
+    "I am no man!...I'm a machine learning algorithm.",
+    "There is always hope...in data integration.",
+    "For Frodo...and for all single cells!",
+    "It's a dangerous business, Frodo, going out your door...into uncorrected batches.",
+    "Fool of a Took! This is a serious journey to Mount Doom of batch correction!",
+    "Keep it secret, keep it safe...and normalize your counts per million.",
+    "The world is indeed full of peril...and uncorrected batch effects.",
+    "There never was much hope...just a fool's hope in ignoring batch artifacts.",
+    "We must take the samples to Isengard!",
+    "You shall be...the Fellowship of the Data!",
+    "One Cell to rule them all...one Cell to find them, one Cell to bring them all and in the darkness bind them.",
+    "My old Gaffer used to say...always check for unwanted sources of variation.",
+    "If in doubt, Meriadoc...always choose a random forest.",
+    "The closer we are to integration, the fairer the cells have become.",
+    "Even the smallest cell type can change the course of the future.",
+    "Deserters will not be tolerated! Stay your ground, stay true to your cluster identities!",
+    "So do all who live to see such batch-corrected times...but that is not for them to decide.",
+    "For sixty years, the single-cell field lingered...but no longer, my friends! Rohan is indeed amazing with these new technologies.",
+    "From the ashes a fire shall be woken, a light to renew the age of single-cell genomics!",
+    "I will not say: do not weep; for not all tears are an evil....especially when you get beautiful single-cell results.",
+    "Tell me, friend...when did Saruman the Wise abandon batch correction for madness?",,
+    "Don't adventures ever have an end? I suppose not...best keep analyzing this dataset then.",
+    "Did we jump universes?",
+    "Gandalf!, You're not supposed to be here!",
   )
-    
- 
-  
+
   message <- sample(messages, 1)
   cat("\n")
   cat('WookieSays:', message, "\n")
