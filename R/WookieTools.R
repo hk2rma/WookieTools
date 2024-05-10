@@ -1,4 +1,4 @@
-# WookieTools - Version 0.8.4
+# WookieTools - Version 0.8.4.1
 
 # Seurat Object Quality Control function
 #' @name wookieqc
@@ -211,6 +211,7 @@ wookie_Mindist <- function(seurat_obj, features = NULL, dims = 1:30,
 #' @param combine Whether to combine plots into a single grid
 #' @param raster Optional raster object for plotting
 #' @param raster.dpi Resolution for raster plotting
+#' @param cells which cells to plot deafult is null
 #' @param silentwookie stop wookie from printing puns, default is FALSE
 #' @return Plot grid
 #' @export
@@ -1183,10 +1184,10 @@ wookieSay <- function() {
     "For sixty years, the single-cell field lingered...but no longer, my friends! Rohan is indeed amazing with these new technologies.",
     "From the ashes a fire shall be woken, a light to renew the age of single-cell genomics!",
     "I will not say: do not weep; for not all tears are an evil....especially when you get beautiful single-cell results.",
-    "Tell me, friend...when did Saruman the Wise abandon batch correction for madness?",,
+    "Tell me, friend...when did Saruman the Wise abandon batch correction for madness?",
     "Don't adventures ever have an end? I suppose not...best keep analyzing this dataset then.",
     "Did we jump universes?",
-    "Gandalf!, You're not supposed to be here!",
+    "Gandalf!, You're not supposed to be here!"
   )
 
   message <- sample(messages, 1)

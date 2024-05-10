@@ -89,6 +89,8 @@ wookie_featureplot(
 \item{raster.dpi}{Resolution for raster plotting}
 
 \item{silentwookie}{stop wookie from printing puns, default is FALSE}
+
+\item{cells}{which cells to plot deafult is null}
 }
 \value{
 Plot grid
