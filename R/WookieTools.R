@@ -1,4 +1,4 @@
-# WookieTools - Version 0.8.5.1
+# WookieTools - Version 0.8.5.2
 
 # Seurat Object Quality Control function
 #' @name wookieqc
@@ -194,7 +194,7 @@ wookie_umapWizard <- function(object = seu_obj, features = NULL,
 #' @title Plot multiple features with color map
 #' @import Seurat
 #' @import ggplot2
-#' @import cowplot
+#' @import gridExtra
 #' @description Plot multiple features with custom color scale
 #' @param seuratObject Seurat object
 #' @param featureList List of features to plot
@@ -227,62 +227,56 @@ wookie_umapWizard <- function(object = seu_obj, features = NULL,
 #' @return Plot grid
 #' @export
 wookie_featureplot <- function(seuratObject, featureList, ncol = 3,
-                  pt.size = 0.8,split_by = NULL,alpha = 1,
-                  order = FALSE,
-                  min.cutoff = NA,
-                  max.cutoff = NA,
-                  reduction = NULL,
-                  keep.scale = "feature",
-                  shape.by = NULL,
-                  slot = "data",
-                  blend = FALSE,
-                  blend.threshold = 0.5,
-                  label = FALSE,
-                  label.size = 4,
-                  label.color = "black",
-                  repel = FALSE,
-                  coord.fixed = FALSE,
-                  by.col = TRUE,
-                  sort.cell = deprecated(),
-                  interactive = FALSE,
-                  combine = TRUE,
-                  raster = NULL,
-                  raster.dpi = c(512, 512),silentwookie = FALSE,cells = NULL) {
-  plotList <- lapply(featureList, function(feature) {
-    FeaturePlot(object = seuratObject, features = feature, 
-                pt.size = pt.size,
-                alpha = alpha,
-                order = order,
-                min.cutoff = min.cutoff,
-                max.cutoff = max.cutoff,
-                reduction = reduction,
-                split.by = split_by,
-                keep.scale = keep.scale,
-                shape.by = shape.by ,
-                slot = slot,
-                blend = blend,
-                blend.threshold = blend.threshold,
-                label = label,
-                label.size = label.size,
-                label.color = label.color,
-                repel = repel,
-                ncol = ncol,
-                coord.fixed = coord.fixed,
-                by.col = by.col,
-                interactive = interactive,
-                combine = combine,
-                raster = raster,
-                raster.dpi = raster.dpi,cells = cells) +
-      theme(aspect.ratio = 1) +
-      scale_color_gradientn(colours = c("#DCDCDC", "yellow", "orange", "red", "#8b0000"))
+                               pt.size = 1, split_by = NULL, alpha = 1,
+                               order = FALSE, dims = c(1,2),
+                               min.cutoff = NA, max.cutoff = NA,
+                               reduction = NULL, keep.scale = "feature",
+                               shape.by = NULL, slot = "data",
+                               blend = FALSE, blend.threshold = 0.5,
+                               label = FALSE, label.size = 2,
+                               label.color = "black", repel = FALSE,
+                               coord.fixed = FALSE, by.col = TRUE,
+                               sort.cell = deprecated(), interactive = FALSE,
+                               combine = TRUE, raster = NULL,
+                               raster.dpi = c(512, 512), silentwookie = FALSE, cells = NULL) {
+  suppressMessages({
+    plotList <- lapply(featureList, function(feature) {
+      FeaturePlot(object = seuratObject, features = feature, dims = dims,
+                  pt.size = pt.size,
+                  alpha = alpha,
+                  order = order,
+                  min.cutoff = min.cutoff,
+                  max.cutoff = max.cutoff,
+                  reduction = reduction,
+                  split.by = split_by,
+                  keep.scale = keep.scale,
+                  shape.by = shape.by ,
+                  slot = slot,
+                  blend = blend,
+                  blend.threshold = blend.threshold,
+                  label = label,
+                  label.size = label.size,
+                  label.color = label.color,
+                  repel = repel,
+                  ncol = ncol,
+                  coord.fixed = coord.fixed,
+                  by.col = by.col,
+                  interactive = interactive,
+                  combine = combine,
+                  raster = raster,
+                  raster.dpi = raster.dpi,cells = cells) +
+        theme(aspect.ratio = 1) +
+        scale_color_gradientn(colours = c("#DCDCDC", "yellow", "orange", "red", "#8b0000"))
+    })
+    # Suppress messages from the grid.arrange function
+    
+    # Suppress messages from grid.arrange using capture.output
+    fplot <- capture.output(do.call(grid.arrange, c(plotList, ncol = ncol)))
   })
-  
-  plotGrid <- plot_grid(plotlist = plotList, ncol = ncol, 
-                        rel_widths = rep(1, length(featureList)))
-  if (silentwookie == FALSE){
+  if (!silentwookie) {
     wookieSay()
   }
-  return(plotGrid)
+  
 }
 
 
