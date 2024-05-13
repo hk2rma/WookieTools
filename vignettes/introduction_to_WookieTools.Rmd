@@ -1,0 +1,107 @@
+---
+title: "WookieTools: A Vignette for Single-Cell RNA-Seq Analysis"
+author: "Harikrishnan Ajith"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{WookieTools}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r}
+library(Seurat)
+library(WookieTools)
+```
+
+```{r}
+pbmc.data <- Read10X(data.dir = "../scratch_data/pbmc3k_filtered_gene_bc_matrices/filtered_gene_bc_matrices/hg19/")
+```
+
+```{r}
+wookie_matrix_qc(pbmc.data)
+```
+
+```{r}
+pbmc_uf <- CreateSeuratObject(counts = pbmc.data, project = "pbmc3k", min.cells = 3, min.features = 200)
+
+```
+
+```{r}
+wookie_get_filters(pbmc_uf,multiplier = 3)
+```
+
+```{r}
+wookie_fc_hist(pbmc_uf,fi = 1700,ci = 5600)
+```
+
+```{r}
+pbmc <- wookie_qc(pbmc_uf,nf_min = 200,nf_max = 1700,nc_max = 5600,nc_min = 0,pmt = 5,
+                  species = 'Human',pt.size = FALSE)
+```
+
+```{r}
+pbmc <- NormalizeData(pbmc)
+pbmc <- FindVariableFeatures(pbmc, selection.method = "vst", nfeatures = 2000)
+all.genes <- rownames(pbmc)
+pbmc <- ScaleData(pbmc, features = all.genes)
+pbmc <- RunPCA(pbmc, features = VariableFeatures(object = pbmc))
+DimPlot(pbmc, reduction = "pca") + NoLegend()
+```
+
+```{r}
+wookie_get_pc(pbmc)
+```
+
+```{r}
+pbmc <- FindNeighbors(pbmc, dims = 1:10)
+pbmc <- FindClusters(pbmc, resolution = 0.5)
+pbmc <- RunUMAP(pbmc, dims = 1:10)
+DimPlot(pbmc)
+```
+
+```{r}
+wookie_Mindist(pbmc,dims = 1:10)
+```
+
+```{r}
+var.features <- VariableFeatures(pbmc)
+wookie_multifeatureumap(pbmc,features = var.features,min.dist = 0.3,
+                        ftype = 'HVG',max_features = 2000,step = 500)
+```
+
+```{r}
+wookie_clusterSimilarityPlot(pbmc,reduction = 'pca',dims = 1:10,clusters = 'seurat_clusters')
+```
+
+```{r}
+wookie_clustertree(pbmc,dims = 1:10)
+```
+
+```{r}
+wookie_pcePlot(pbmc)
+```
+
+```{r}
+wookie_silhouettePlot(pbmc)
+```
+
+```{r}
+wookie_jaccardPlot(pbmc)
+```
+
+
+```{r}
+marker_gene_list <- list(
+  Naive_CD4plus = c('IL7R','CCR7'),
+  CD14plus_Mono = c('CD14','LYZ'),
+  Memory_CD4plus = c('IL7R','S100A4'),
+  B_Cell = c('MS4A1'),
+  FCGR3Aplus_Mono = c('FCGR3A','MS4A7'),
+  NK_Cell = c('GNLY','NKG7'),
+  DC = c('FCER1A','CST3'),
+  Platelet = c('PPBP'))
+  
+pbmc <- wookie_annotate(pbmc,marker_gene_list)
+DimPlot(pbmc,group.by = 'wookie_celltype',label = TRUE)
+```

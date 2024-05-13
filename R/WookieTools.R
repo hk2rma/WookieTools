@@ -1,4 +1,4 @@
-# WookieTools - Version 0.8.4.1
+# WookieTools - Version 0.8.5
 
 # Seurat Object Quality Control function
 #' @name wookieqc
@@ -101,83 +101,94 @@ wookie_qc <- function(seurat_obj, nf_min = 0, nf_max = 20000,
   
 }
 
-# Function to run and plot multiple UMAP's for different numbers of a feature(Highly variable genes or Most Abundant genes)
-# Features must be obtained and given as input
-#' @name wookie_multifeatureumap
-#' @title Plot UMAPs to test features
+#' @name wookie_umapWizard
+#' @title Plot UMAPs to test features, min.dist values, and dimensions
 #' @import Seurat
 #' @import ggplot2
 #' @import cowplot
-#' @param silentwookie stop wookie from printing puns, default is FALSE
-#' @description plot multiple UMAP's for different numbers of a feature i.e Highly variable genes or Most Abundant genes ...
-#' @return plot saved to global environment
-#' @export
-wookie_multifeatureumap <- function(object = seu_obj, features = features,
-                                    min.dist = 0.1, max_features = 3000,
-                                    ftype='HVG',step = 500,
-                                    out_name = 'combined_umap',silentwookie = FALSE) {
-  plot_list <- list()
-  
-  for (feature_length in seq(500, max_features, step)) {
-    current_features <- features[1:feature_length]
-    cat(paste0('Calculating UMAP at ',ftype,':',feature_length))
-    current_umap <- RunUMAP(object, features = current_features, min.dist = min.dist)
-    current_plot <- DimPlot(current_umap, reduction = 'umap') + 
-                    ggtitle(paste('UMAP ',ftype, feature_length))
-    plot_list[[length(plot_list) + 1]] <- current_plot
-    cat(paste0('UMAP done for ',ftype,':',feature_length))
-  }
-  
-  # Combine plots into a grid
-  combined_plot <- plot_grid(plotlist = plot_list)
-  
-  # Assign the combined plot to a variable in the global environment
-  assign(out_name, combined_plot, envir = globalenv())
-  if (silentwookie == FALSE){
-    wookieSay()
-  }
-  # Return the combined plot
-  return(combined_plot)
-}
-
-
-# Function to plot multiple UMAPs at different min.dist values
-#' @name wookie_Mindist
-#' @title Plot UMAPs for various min.dist values
-#' @import Seurat
-#' @import cowplot
-#' @import ggplot2
-#' @description Plot UMAPs for different min.dist values
-#' @param seurat_obj Seurat object
-#' @param features Features to use for UMAP
-#' @param reduction reduction for RunUMAP , deafult is 'pca'
-#' @param dims Dimensions to use for UMAP
+#' @param object Seurat object
+#' @param features Features to use for UMAP (required for feature mode)
+#' @param min.dist Minimum distance parameter for UMAP
+#' @param max_features Maximum number of features to test (for feature mode)
+#' @param ftype Feature type ('HVG' for highly variable genes or 'MAG' for most abundant genes)
+#' @param step Step size for incrementing the number of features (for feature mode)
 #' @param out_name Name to assign to the combined plot
-#' @param silentwookie stop wookie from printing puns, default is FALSE
+#' @param silentwookie Stop Wookie from printing puns, default is FALSE
+#' @param mode Mode of operation: 'features', 'min.dist', or 'dims'
+#' @param reduction Reduction method for UMAP (for min.dist and dims modes)
+#' @param max_dims Maximum number of dimensions to test (for dims mode)
+#' @param dims_step Step size for incrementing the number of dimensions (for dims mode)
+#' @description Plot multiple UMAPs to test features, min.dist values, or dimensions
 #' @return Combined UMAP plot
 #' @export
-wookie_Mindist <- function(seurat_obj, features = NULL, dims = 1:30, 
-                                     out_name = 'min_dist_umaps',
-                           reduction = 'pca',silentwookie = FALSE) {
-  plot_list <- list()
-  
-  for (min_dist in seq(0.1, 0.5, 0.1)) {
-    cat(paste0('Calculating UMAP at min.dist:', min_dist, '...'))
-    current_umap <- RunUMAP(seurat_obj, features = features,
-                            dims = dims, min.dist = min_dist,reduction = reduction)
-    current_plot <- DimPlot(current_umap, reduction = 'umap') + 
-                          ggtitle(paste('UMAP: min.dist:', min_dist))
-    plot_list[[length(plot_list) + 1]] <- current_plot
-    cat("Done.\n")
+wookie_umapWizard <- function(object = seu_obj, features = NULL,
+                                                 min.dist = 0.3, max_features = 3000,
+                                                 ftype = 'HVG', step = 500,
+                                                 out_name = 'combined_umap', silentwookie = FALSE,
+                                                 mode = 'features', reduction = 'pca',
+                                                 max_dims = 30, dims_step = 5) {
+  if (mode == 'features') {
+    if (is.null(features)) {
+      stop("Features must be provided for the 'features' mode.")
+    }
+    if (length(features) < max_features) {
+      stop("The length of the features vector must be equal to or greater than max_features.")
+    }
+    plot_list <- list()
+    for (feature_length in seq(500, max_features, step)) {
+      current_features <- features[1:feature_length]
+      cat(paste0('Calculating UMAP at ', ftype, ':', feature_length))
+      current_umap <- RunUMAP(object, features = current_features, min.dist = min.dist)
+      current_plot <- DimPlot(current_umap, reduction = 'umap') +
+        ggtitle(paste('UMAP ', ftype, feature_length))
+      plot_list[[length(plot_list) + 1]] <- current_plot
+      cat(paste0('UMAP done for ', ftype, ':', feature_length))
+    }
+    combined_plot <- plot_grid(plotlist = plot_list)
+  } else if (mode == 'min.dist') {
+    plot_list <- list()
+    for (current_min_dist in seq(0.1, 0.5, 0.1)) {
+      cat(paste0('Calculating UMAP at min.dist:', current_min_dist, '...'))
+      if (!is.null(dims)) {
+        current_umap <- RunUMAP(object, dims = 1:max_dims,
+                                min.dist = current_min_dist, reduction = reduction)
+      } else if (!is.null(features)) {
+        current_umap <- RunUMAP(object, features = features,
+                                min.dist = current_min_dist, reduction = reduction)
+      } else {
+        stop("Either features or dims must be provided for the 'min.dist' mode.")
+      }
+      current_plot <- DimPlot(current_umap, reduction = 'umap') +
+        ggtitle(paste('UMAP: min.dist:', current_min_dist))
+      plot_list[[length(plot_list) + 1]] <- current_plot
+      cat("Done.\n")
+    }
+    combined_plot <- plot_grid(plotlist = plot_list)
+  } else if (mode == 'dims') {
+    plot_list <- list()
+    for (current_dims in seq(dims_step, max_dims, dims_step)) {
+      cat(paste0('Calculating UMAP at dims:', current_dims, '...'))
+      current_umap <- RunUMAP(object, features = NULL,
+                              dims = 1:current_dims, min.dist = min.dist, reduction = reduction)
+      current_plot <- DimPlot(current_umap, reduction = 'umap') +
+        ggtitle(paste('UMAP: dims:', current_dims))
+      plot_list[[length(plot_list) + 1]] <- current_plot
+      cat("Done.\n")
+    }
+    combined_plot <- plot_grid(plotlist = plot_list)
+  } else {
+    stop("Invalid mode. Mode should be either 'features', 'min.dist', or 'dims'.")
   }
   
-  combined_plot <- plot_grid(plotlist = plot_list)
   assign(out_name, combined_plot, envir = globalenv())
-  if (silentwookie == FALSE){
+  
+  if (silentwookie == FALSE) {
     wookieSay()
   }
+  
   return(combined_plot)
 }
+
 
 #' @name wookie_featureplot
 #' @title Plot multiple features with color map
@@ -369,10 +380,13 @@ wookie_matrix_qc <- function(count_matrix_sparse, fill_color = "#589FFF",
           panel.grid.major = element_blank(),
           panel.grid.minor = element_blank())
   
-  plot_grid(p1, p2, p3, p4, ncol = 2) + ggtitle(title)
+  plot <- plot_grid(p1, p2, p3, p4, ncol = 2) + ggtitle(title)
+  
+  print(plot)
   if (silentwookie == FALSE){
     wookieSay()
   }
+  return(plot)
 }
 
 # Function to compare Log Normalisation and SCT (Histogram)
@@ -388,8 +402,8 @@ wookie_matrix_qc <- function(count_matrix_sparse, fill_color = "#589FFF",
 #' @return Histogram comparing Log Normalisation and SCT
 #' @export
 wookie_ge_histogram <- function(seurat_obj,silentwookie = FALSE) {
-  expression_data_RNA <- as.vector(seurat_obj[["SCT"]]@scale.data)
-  expression_data_SCT <- as.vector(seurat_obj[["RNA"]]@scale.data)
+  expression_data_RNA <- as.vector(GetAssayData(seurat_obj, assay = "RNA", layer = "scale.data"))
+  expression_data_SCT <- as.vector(GetAssayData(seurat_obj, assay = "SCT", layer = "scale.data"))
   
   mean_expr_rna <- mean(expression_data_RNA)
   sd_expr_rna <- sd(expression_data_RNA)
@@ -731,7 +745,7 @@ wookie_clusterSimilarityPlot <- function(seurat_obj,dims = 1:30,clusters = 'seur
                                          reduction = 'PCA',silentwookie = FALSE){
   seurat_obj$seurat_clusters <- seurat_obj[[clusters]]
   sce <- as.SingleCellExperiment(seurat_obj)
-  reducedDim(sce, 'PCA_sub') <- reducedDim(sce, 'PCA')[,dims, drop = FALSE]
+  reducedDim(sce, 'PCA_sub') <- reducedDim(sce, reduction)[,dims, drop = FALSE]
   g <- scran::buildSNNGraph(sce, use.dimred = 'PCA_sub')
   ratio <- bluster::pairwiseModularity(g, seurat_obj@meta.data$seurat_clusters, as.ratio = TRUE)
   ratio_to_plot <- log10(ratio+1)

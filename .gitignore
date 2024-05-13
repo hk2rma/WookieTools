@@ -2,5 +2,5 @@
 .Rhistory
 .RData
 .Ruserdata
-test_files/
+scratch_data/
 R/test_functions.R
