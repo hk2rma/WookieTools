@@ -1,5 +1,5 @@
 ---
-title: "WookieTools: A Vignette for Single-Cell RNA-Seq Analysis"
+title: "WookieTools: Handy Tools to accompany you on your Single-Cell Journey"
 author: "Harikrishnan Ajith"
 date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
@@ -9,15 +9,19 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
+WookieTools is meant as an easy to use tool for explanatory analysis, It is suggested that the user should refer the codes on github to understand what each function does and if it is right for your analysis.
+
+For this vignette we will try to follow the Getting started with Seurat Vignette available at: https://satijalab.org/seurat/articles/pbmc3k_tutorial,  please download the pbmc3k dataset as mentioned there should you wish to reproduce these results.
 ```{r}
-library(Seurat)
-library(WookieTools)
+suppressMessages(library(Seurat))
+suppressMessages(library(WookieTools))
 ```
 
 ```{r}
 pbmc.data <- Read10X(data.dir = "../scratch_data/pbmc3k_filtered_gene_bc_matrices/filtered_gene_bc_matrices/hg19/")
 ```
 
+Our first function looks at the counts matrix as read in, to visualise the data
 ```{r}
 wookie_matrix_qc(pbmc.data)
 ```
@@ -27,27 +31,59 @@ pbmc_uf <- CreateSeuratObject(counts = pbmc.data, project = "pbmc3k", min.cells 
 
 ```
 
+
+Wookie_get_filters suggest's objective cutoffs for you data, where it recommends keeping the data lying between mean and n times standard deviation for counts/features, adjust n (multiplier) depending on how strict/lenient you need to be.
+
+
 ```{r}
 wookie_get_filters(pbmc_uf,multiplier = 3)
 ```
 
+
+
+wookie_fc_hist plots a simple histogram, where you can visualise custom cutoffs, here we look at the suggested upper limits.
+
+
 ```{r}
 wookie_fc_hist(pbmc_uf,fi = 1700,ci = 5600)
 ```
+
+
+wookie_qc is your all in one qc function, from counts,features to percentage mitochondrial content and ribosomal content should you wish. species by default is Mouse leading to relevant pattern for mitochondrial content, if not mouse then MT for human is used. 
+
+Run the function iteratively, using the plot to guide your qc
+
 
 ```{r}
 pbmc <- wookie_qc(pbmc_uf,nf_min = 200,nf_max = 1700,nc_max = 5600,nc_min = 0,pmt = 5,
                   species = 'Human',pt.size = FALSE)
 ```
 
+
 ```{r}
 pbmc <- NormalizeData(pbmc)
 pbmc <- FindVariableFeatures(pbmc, selection.method = "vst", nfeatures = 2000)
 all.genes <- rownames(pbmc)
 pbmc <- ScaleData(pbmc, features = all.genes)
+```
+
+Should you wish to compare NormaliseData (Log Normalisation) and SCTransform for your data,
+use wookie_ge_histogram like so:
+
+```{r}
+pbmc.sct <- SCTransform(pbmc)
+wookie_ge_histogram(pbmc.sct)
+```
+
+```{r}
 pbmc <- RunPCA(pbmc, features = VariableFeatures(object = pbmc))
 DimPlot(pbmc, reduction = "pca") + NoLegend()
 ```
+
+
+wookie_get_pc gives you an optimal number of Principal components to use,
+By first computing the percentage of variance explained by each PC and then calculating the cumulative percentage of variance, it identifies two key indicators; The function selects the optimal number of PCs ensuring that at least 90% of the variance is explained while each additional component contributes less than 5% to the total variance, and detecting the "elbow" point in the scree plot where the rate of change in explained variance decreases significantly. 
+
 
 ```{r}
 wookie_get_pc(pbmc)
@@ -60,36 +96,39 @@ pbmc <- RunUMAP(pbmc, dims = 1:10)
 DimPlot(pbmc)
 ```
 
+The umapWizard lets you plot multiple UMAP's in different modes at a time as shown here, you could look at different umaps for different values of either min.dist, dims or features as given to the RunUMAP() function 
+
+
 ```{r}
-wookie_Mindist(pbmc,dims = 1:10)
+wookie_umapWizard(pbmc,mode = 'dims',max_dims = 20,dims_step = 10)
 ```
 
 ```{r}
-var.features <- VariableFeatures(pbmc)
-wookie_multifeatureumap(pbmc,features = var.features,min.dist = 0.3,
-                        ftype = 'HVG',max_features = 2000,step = 500)
+wookie_umapWizard(pbmc,mode = 'features', features = VariableFeatures(pbmc),
+                  max_features = 2000,ftype = 'HVG',step = 500)
+```
+```{r}
+wookie_umapWizard(pbmc,mode = 'dims',max_dims = 20,dims_step = 10)
 ```
 
-```{r}
-wookie_clusterSimilarityPlot(pbmc,reduction = 'pca',dims = 1:10,clusters = 'seurat_clusters')
-```
+The wookie_silhouettePlot function facilitates the visualization of silhouette scores, a measure of clustering quality, for each cluster in a Seurat object. It computes silhouette scores based on pairwise distances between cells in the specified reduced dimensional space and assigns them to their respective clusters.
 
-```{r}
-wookie_clustertree(pbmc,dims = 1:10)
-```
-
-```{r}
-wookie_pcePlot(pbmc)
-```
 
 ```{r}
 wookie_silhouettePlot(pbmc)
 ```
 
+This function gives a jaccard similarity plot comparing each cluster against the others
+
 ```{r}
-wookie_jaccardPlot(pbmc)
+wookie_jaccardPlot(pbmc,test.use = 'wilcox',clusters = 'seurat_clusters',
+                   logfc.threshold = 0.95,min.pct = 0.25,fdr.threshold = 0.05)
 ```
 
+The wookie_annotate function annotates cells within a Seurat object using marker gene sets, providing confidence scores for each annotation. It calculates module scores for cells based on the provided marker genes and assigns cell types based on the highest scoring gene set, considering a specified threshold for confidence. The function then adds these annotations and confidence scores to the Seurat object.
+
+Please note that this a quick and rough way to annotate, annotation is dependent on quality of marker genes, 
+suggested use only for exploratory analysis as of now.
 
 ```{r}
 marker_gene_list <- list(
@@ -103,5 +142,7 @@ marker_gene_list <- list(
   Platelet = c('PPBP'))
   
 pbmc <- wookie_annotate(pbmc,marker_gene_list)
-DimPlot(pbmc,group.by = 'wookie_celltype',label = TRUE)
 ```
+
+
+

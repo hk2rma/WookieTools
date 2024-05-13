@@ -1,4 +1,4 @@
-# WookieTools - Version 0.8.5
+# WookieTools - Version 0.8.5.1
 
 # Seurat Object Quality Control function
 #' @name wookieqc
@@ -149,7 +149,7 @@ wookie_umapWizard <- function(object = seu_obj, features = NULL,
     plot_list <- list()
     for (current_min_dist in seq(0.1, 0.5, 0.1)) {
       cat(paste0('Calculating UMAP at min.dist:', current_min_dist, '...'))
-      if (!is.null(dims)) {
+      if (!is.null(max_dims)) {
         current_umap <- RunUMAP(object, dims = 1:max_dims,
                                 min.dist = current_min_dist, reduction = reduction)
       } else if (!is.null(features)) {
@@ -724,68 +724,6 @@ wookie_silhouettePlot <- function(seurat,cluster = 'seurat_clusters',dims = 1:30
   
 }
 
-
-# Function to plot cluster Similarity
-#' @name wookie_clusterSimilarityPlot
-#' @title Function to plot cluster Similarity
-#' @import Seurat
-#' @import scran
-#' @import bluster
-#' @import ggplot2
-#' @import cluster
-#' @description Function to plot cluster Similarity
-#' @param seurat_obj Seurat object
-#' @param clusters default is 'seurat_clusters'
-#' @param dims dimension, default is 1:30
-#' @param reduction default is 'PCA'
-#' @param silentwookie stop wookie from printing puns, default is FALSE
-#' @return cluster Similarity heatmap
-#' @export
-wookie_clusterSimilarityPlot <- function(seurat_obj,dims = 1:30,clusters = 'seurat_clusters',
-                                         reduction = 'PCA',silentwookie = FALSE){
-  seurat_obj$seurat_clusters <- seurat_obj[[clusters]]
-  sce <- as.SingleCellExperiment(seurat_obj)
-  reducedDim(sce, 'PCA_sub') <- reducedDim(sce, reduction)[,dims, drop = FALSE]
-  g <- scran::buildSNNGraph(sce, use.dimred = 'PCA_sub')
-  ratio <- bluster::pairwiseModularity(g, seurat_obj@meta.data$seurat_clusters, as.ratio = TRUE)
-  ratio_to_plot <- log10(ratio+1)
-  clus_similarity_Plot <- ratio_to_plot %>%
-    as_tibble() %>%
-    rownames_to_column(var = 'cluster_1') %>%
-    pivot_longer(
-      cols = 2:ncol(.),
-      names_to = 'cluster_2',
-      values_to = 'probability'
-    ) %>%
-    mutate(
-      cluster_1 = as.character(as.numeric(cluster_1) - 1),
-      cluster_1 = factor(cluster_1, levels = rev(unique(cluster_1))),
-      cluster_2 = factor(cluster_2, levels = unique(cluster_2))
-    ) %>%
-    ggplot(aes(cluster_2, cluster_1, fill = probability)) +
-    geom_tile(color = 'white') +
-    geom_text(aes(label = round(probability, digits = 2)), size = 2.5) +
-    scale_x_discrete(name = 'Cluster', position = 'top') +
-    scale_y_discrete(name = 'Cluster') +
-    scale_fill_gradient(
-      name = 'log10(ratio)', low = 'white', high = '#c0392b', na.value = '#bdc3c7',
-      guide = guide_colorbar(
-        frame.colour = 'black', ticks.colour = 'black', title.position = 'left',
-        title.theme = element_text(hjust = 1, angle = 90),
-        barwidth = 0.75, barheight = 10
-      )
-    ) +
-    coord_fixed() +
-    theme_bw() +
-    theme(
-      legend.position = 'right',
-      panel.grid.major = element_blank()
-   )
-  if (silentwookie == FALSE){
-    wookieSay()
-  }
-  return(clus_similarity_Plot)
-}
 
 # Function to plot Jaccard similarity index
 #' @name wookie_jaccardPlot
