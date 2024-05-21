@@ -16,7 +16,10 @@ wookie_umapWizard(
   mode = "features",
   reduction = "pca",
   max_dims = 30,
-  dims_step = 5
+  dims_step = 5,
+  nn_min = 10,
+  nn_max = 50,
+  nn_step = 10
 )
 }
 \arguments{

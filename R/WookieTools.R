@@ -1,4 +1,4 @@
-# WookieTools - Version 0.8.5.2
+# WookieTools - Version 0.8.5.4
 
 # Seurat Object Quality Control function
 #' @name wookieqc
@@ -122,11 +122,11 @@ wookie_qc <- function(seurat_obj, nf_min = 0, nf_max = 20000,
 #' @return Combined UMAP plot
 #' @export
 wookie_umapWizard <- function(object = seu_obj, features = NULL,
-                                                 min.dist = 0.3, max_features = 3000,
-                                                 ftype = 'HVG', step = 500,
-                                                 out_name = 'combined_umap', silentwookie = FALSE,
-                                                 mode = 'features', reduction = 'pca',
-                                                 max_dims = 30, dims_step = 5) {
+                              min.dist = 0.3, max_features = 3000,
+                              ftype = 'HVG', step = 500,
+                              out_name = 'combined_umap', silentwookie = FALSE,
+                              mode = 'features', reduction = 'pca',
+                              max_dims = 30, dims_step = 5,nn_min = 10, nn_max = 50, nn_step = 10) {
   if (mode == 'features') {
     if (is.null(features)) {
       stop("Features must be provided for the 'features' mode.")
@@ -138,7 +138,7 @@ wookie_umapWizard <- function(object = seu_obj, features = NULL,
     for (feature_length in seq(500, max_features, step)) {
       current_features <- features[1:feature_length]
       cat(paste0('Calculating UMAP at ', ftype, ':', feature_length))
-      current_umap <- RunUMAP(object, features = current_features, min.dist = min.dist)
+      current_umap <- RunUMAP(object, features = current_features, min.dist = min.dist,n.neighbors = nn_max)
       current_plot <- DimPlot(current_umap, reduction = 'umap') +
         ggtitle(paste('UMAP ', ftype, feature_length))
       plot_list[[length(plot_list) + 1]] <- current_plot
@@ -154,7 +154,7 @@ wookie_umapWizard <- function(object = seu_obj, features = NULL,
                                 min.dist = current_min_dist, reduction = reduction)
       } else if (!is.null(features)) {
         current_umap <- RunUMAP(object, features = features,
-                                min.dist = current_min_dist, reduction = reduction)
+                                min.dist = current_min_dist, reduction = reduction,n.neighbors = nn_max)
       } else {
         stop("Either features or dims must be provided for the 'min.dist' mode.")
       }
@@ -169,15 +169,27 @@ wookie_umapWizard <- function(object = seu_obj, features = NULL,
     for (current_dims in seq(dims_step, max_dims, dims_step)) {
       cat(paste0('Calculating UMAP at dims:', current_dims, '...'))
       current_umap <- RunUMAP(object, features = NULL,
-                              dims = 1:current_dims, min.dist = min.dist, reduction = reduction)
+                              dims = 1:current_dims, min.dist = min.dist, reduction = reduction,n.neighbors = nn_max)
       current_plot <- DimPlot(current_umap, reduction = 'umap') +
         ggtitle(paste('UMAP: dims:', current_dims))
       plot_list[[length(plot_list) + 1]] <- current_plot
       cat("Done.\n")
     }
     combined_plot <- plot_grid(plotlist = plot_list)
-  } else {
-    stop("Invalid mode. Mode should be either 'features', 'min.dist', or 'dims'.")
+  } else if (mode == 'n.neighbors') {
+    plot_list <- list()
+    for (current_nn in seq(nn_min, nn_max, nn_step)) {
+      cat(paste0('Calculating UMAP at n.neighbors:', current_nn, '...'))
+      current_umap <- RunUMAP(object, features = NULL,
+                              dims = 1:max_dims, min.dist = min.dist,n.neighbors = current_nn,reduction = reduction)
+      current_plot <- DimPlot(current_umap, reduction = 'umap') +
+        ggtitle(paste('UMAP: nn:', current_nn))
+      plot_list[[length(plot_list) + 1]] <- current_plot
+      cat("Done.\n")
+    }
+    combined_plot <- plot_grid(plotlist = plot_list)
+  }else {
+    stop("Invalid mode. Mode should be either 'features', 'min.dist','n.neighbors',or 'dims'.")
   }
   
   assign(out_name, combined_plot, envir = globalenv())
@@ -976,6 +988,75 @@ wookie_annotate <- function(object, marker_gene_list, threshold = 0,silentwookie
   }
   return(object)
 }
+
+
+
+# Function to plot entropy of a batch across clusters to evaluate mixing between batches
+#' @name wookie_batch_entropy
+#' @title Function to plot entropy of a batch
+#' @import Seurat
+#' @import viridis
+#' @import entropy
+#' @import ggplot2
+#' @description Function to plot entropy of a batch across clusters to evaluate mixing between batches, higher the entropy better the mixing
+#' @param object Seurat object
+#' @param batch.key metadata column with batch information
+#' @param cluster.key metadata column with cluster information
+#' @param silentwookie stop wookie from printing puns, default is FALSE
+#' @return plot
+#' @export
+wookie_batch_entropy <- function(seurat_obj, batch.key = "batch", cluster.key = 'seurat_clusters') {
+  
+  # Assign temporary cluster identities
+  seurat_obj$temp.clusters <- seurat_obj[[cluster.key]]
+  Idents(seurat_obj) <- seurat_obj$temp.clusters
+  
+  # Calculate batch entropy for each cluster
+  calculate_entropy <- function(seurat_obj, cluster_id, batch.key) {
+    cells_in_cluster <- WhichCells(seurat_obj, idents = cluster_id)
+    batch_counts <- table(seurat_obj@meta.data[cells_in_cluster, batch.key])
+    entropy(batch_counts)
+  }
+  
+  # Apply to all clusters
+  clusters <- levels(Idents(seurat_obj))
+  batch_entropies <- sapply(clusters, function(cl) calculate_entropy(seurat_obj, cl, batch.key))
+  
+  # Create a data frame for ggplot2
+  entropy_df <- data.frame(
+    Cluster = factor(clusters, levels = clusters),
+    BatchEntropy = batch_entropies
+  )
+  
+  # Create the plot using ggplot2
+  p <- ggplot(entropy_df, aes(x = Cluster, y = BatchEntropy, fill = BatchEntropy)) +
+    geom_bar(stat = "identity") +
+    scale_fill_viridis_c() +
+    labs(x = cluster.key, y = paste0(batch.key, " Entropy"), title = "Batch Entropy by Cluster") +
+    theme_minimal() +
+    theme(axis.text.x = element_text(angle = 90, hjust = 1))
+  
+  return(p)
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 wookieSay <- function() {
