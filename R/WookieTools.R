@@ -1,4 +1,4 @@
-# WookieTools - Version 0.8.5.4
+# WookieTools - Version 0.8.6
 
 # Seurat Object Quality Control function
 #' @name wookieqc
@@ -1005,7 +1005,7 @@ wookie_annotate <- function(object, marker_gene_list, threshold = 0,silentwookie
 #' @param silentwookie stop wookie from printing puns, default is FALSE
 #' @return plot
 #' @export
-wookie_batch_entropy <- function(seurat_obj, batch.key = "batch", cluster.key = 'seurat_clusters') {
+wookie_batch_entropy <- function(seurat_obj, batch.key = "batch", cluster.key = 'seurat_clusters',silentwookie = FALSE) {
   
   # Assign temporary cluster identities
   seurat_obj$temp.clusters <- seurat_obj[[cluster.key]]
@@ -1035,27 +1035,153 @@ wookie_batch_entropy <- function(seurat_obj, batch.key = "batch", cluster.key = 
     labs(x = cluster.key, y = paste0(batch.key, " Entropy"), title = "Batch Entropy by Cluster") +
     theme_minimal() +
     theme(axis.text.x = element_text(angle = 90, hjust = 1))
-  
+  if (silentwookie == FALSE){
+    wookieSay()
+  }
   return(p)
 }
 
 
+# Function to plot number of clusters across a set of resolutions
+#' @name wookie_find_resolution
+#' @title Function to plot number of clusters per resolution
+#' @import Seurat
+#' @import ggplot2
+#' @description Function to plot number of clusters across a set of resolutions, to identify an optimal resolution
+#' @param seurat_obj Seurat object
+#' @param algorithm same as Seurat FindClusters, Default is 1 : Louvain
+#' @param resolution_range range of resolution to plot, default is : c(0.1, 2)
+#' @param resolution_step default is 0.01
+#' @param silentwookie stop wookie from printing puns, default is FALSE
+#' @return plot
+#' @export
+wookie_find_resolution <- function(seurat_obj, algorithm = 1, resolution_range = c(0.1, 2), resolution_step = 0.01) {
+  resolution_df <- data.frame(Resolution = numeric(), Clusters = integer())
+  
+  for (current_resolution in seq(resolution_range[1], resolution_range[2], resolution_step)) {
+    current_obj <- FindClusters(seurat_obj, resolution = current_resolution, algorithm = algorithm)
+    num_clusters <- length(unique(Idents(current_obj)))
+    resolution_df <- rbind(resolution_df,
+                           data.frame(Resolution = current_resolution,
+                                      Clusters = num_clusters))
+  }
+  
+  resolution_df$Resolution <- as.numeric(as.character(resolution_df$Resolution))
+  
+  plot <- ggplot(resolution_df, aes(x = Resolution, y = Clusters)) +
+    geom_point() +
+    xlab("Resolution") +
+    ylab("Number of Clusters") +
+    theme_minimal() +
+    scale_x_continuous(breaks = seq(resolution_range[1], resolution_range[2], by = 0.1), limits = resolution_range) +
+    scale_y_continuous(limits = c(0, max(resolution_df$Clusters) + 2))
+  if (silentwookie == FALSE){
+    wookieSay()
+  }
+  return(plot)
+}
 
 
+# Function to plot shared neighbors per batch
+#' @name wookie_evaluate_batch_correction
+#' @title Function to plot shared neighbours per batch
+#' @import Seurat
+#' @import ggplot2
+#' @import dplyr
+#' @import tidyr
+#' @import tibble
+#' @description Function to plot shared neighbours per batch, to evaluate batch correction, 
+#' i.e  the idea being that each cell should have a similar number of shared nearest neighbours from each batch.
+#' @param seurat_obj Seurat object
+#' @param reduction default is 'harmony'
+#' @param batch_col metadata column with batch information
+#' @param group_by_cluster set to TRUE, if the plot should be grouped by clusters. default is FALSE
+#' @param cluster_col metadata column with cluster information to group by
+#' @param k.param k.param for Seurat::FindNeighbours
+#' @param silentwookie stop wookie from printing puns, default is FALSE
+#' @return plot
+#' @export
+wookie_evaluate_batch_correction <- function(seurat_obj, reduction = 'harmony',
+                                      batch_col = NULL, group_by_cluster = FALSE, 
+                                      cluster_col = NULL,k.param = 20,
+                                      silentwookie = FALSE) {
+  
+  if (is.null(batch_col) || !(batch_col %in% colnames(seurat_obj@meta.data))) {
+    stop('Error: Please provide a valid batch information column name.')
+  }
+  
+  if (group_by_cluster &&
+      (is.null(cluster_col) || !(cluster_col %in%
+                                 colnames(seurat_obj@meta.data)))) {
+    stop('Error: Please provide a valid cluster column name if grouping by cluster.')
+  }
+  
+  # Find neighbors using the specified reduction
+  seurat_obj <- FindNeighbors(seurat_obj, reduction = reduction, return.neighbor = TRUE,k.param = k.param)
+  neighbor.matrix <- seurat_obj@neighbors$RNA.nn@nn.idx
+  
+  # Get batch information
+  batch.info <- seurat_obj@meta.data[[batch_col]]
+  
+  # Get unique batch values
+  batch_levels <- unique(batch.info)
+  
+  # Create a list to store neighbor counts for each batch
+  neighbor_counts_list <- vector("list", length(batch_levels))
+  names(neighbor_counts_list) <- batch_levels
+  
+  # Initialize the neighbor counts vectors
+  for (batch in batch_levels) {
+    neighbor_counts_list[[batch]] <- numeric(length = nrow(neighbor.matrix))
+  }
+  
+  # Count neighbors from each batch for each cell
+  for (i in 1:nrow(neighbor.matrix)) {
+    neighbors <- neighbor.matrix[i, ]
+    for (batch in batch_levels) {
+      neighbor_counts_list[[batch]][i] <- sum(batch.info[neighbors] == batch)
+    }
+  }
+  
+  # Add counts to metadata
+  for (batch in batch_levels) {
+    col_name <- paste0(batch, ".neighbor.counts")
+    seurat_obj@meta.data[[col_name]] <- neighbor_counts_list[[batch]]
+  }
+  
+  # Add cluster ID to metadata if grouping by cluster
+  if (group_by_cluster) {
+    seurat_obj@meta.data$cluster_id <- seurat_obj@meta.data[[cluster_col]]
+  } else {
+    seurat_obj@meta.data$cluster_id <- "All"
+  }
+  
+  # Create a data frame for plotting
+  neighbor_counts <- seurat_obj@meta.data %>%
+    rownames_to_column("cell") %>%
+    select(cell, cluster_id, matches("\\.neighbor\\.counts$")) %>%
+    pivot_longer(cols = matches("\\.neighbor\\.counts$"),
+                 names_to = "batch",
+                 values_to = "neighbor_count") %>%
+    mutate(batch = sub("\\.neighbor\\.counts$", "", batch)) %>%
+    arrange(cluster_id, cell)
+  
+  # Plot the data
+  plot <- ggplot(neighbor_counts, aes(x = cell, y = neighbor_count, fill = batch)) +
+    geom_col(position = "stack") +
+    labs(x = "Cell", y = "Number of Neighbors") +
+    ggtitle("Distribution of Nearest Neighbors by Batch for Each Cell") +
+    theme(axis.text.x = element_blank(),  # Hide x-axis text to reduce clutter
+          axis.ticks.x = element_blank()) +
+    guides(fill = guide_legend(title = "Batch")) +
+    facet_wrap(~ cluster_id, scales = "free_x", nrow = 1)
 
-
-
-
-
-
-
-
-
-
-
-
-
-
+  if (silentwookie == FALSE){
+    wookieSay()
+  }  
+  
+ return(plot)  
+}
 
 
 

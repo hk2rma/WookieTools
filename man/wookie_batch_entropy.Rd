@@ -7,7 +7,8 @@
 wookie_batch_entropy(
   seurat_obj,
   batch.key = "batch",
-  cluster.key = "seurat_clusters"
+  cluster.key = "seurat_clusters",
+  silentwookie = FALSE
 )
 }
 \arguments{
@@ -15,9 +16,9 @@ wookie_batch_entropy(
 
 \item{cluster.key}{metadata column with cluster information}
 
-\item{object}{Seurat object}
-
 \item{silentwookie}{stop wookie from printing puns, default is FALSE}
+
+\item{object}{Seurat object}
 }
 \value{
 plot
