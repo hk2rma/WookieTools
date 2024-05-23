@@ -1,4 +1,4 @@
-# WookieTools - Version 0.8.6
+# WookieTools - Version 0.8.6.1
 
 # Seurat Object Quality Control function
 #' @name wookieqc
@@ -1055,7 +1055,10 @@ wookie_batch_entropy <- function(seurat_obj, batch.key = "batch", cluster.key = 
 #' @param silentwookie stop wookie from printing puns, default is FALSE
 #' @return plot
 #' @export
-wookie_find_resolution <- function(seurat_obj, algorithm = 1, resolution_range = c(0.1, 2), resolution_step = 0.01) {
+wookie_find_resolution <- function(seurat_obj, algorithm = 1,
+                                   resolution_range = c(0.1, 2),
+                                   resolution_step = 0.05,
+                                   silentwookie = FALSE) {
   resolution_df <- data.frame(Resolution = numeric(), Clusters = integer())
   
   for (current_resolution in seq(resolution_range[1], resolution_range[2], resolution_step)) {

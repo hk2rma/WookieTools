@@ -1,7 +1,7 @@
 Package: WookieTools
 Type: Package
 Title: Handy Tools for Single-Cell Analysis using Seurat
-Version: 0.8.6
+Version: 0.8.6.1
 Encoding: UTF-8
 RoxygenNote: 7.3.1
 VignetteBuilder: knitr

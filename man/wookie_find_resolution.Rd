@@ -8,7 +8,8 @@ wookie_find_resolution(
   seurat_obj,
   algorithm = 1,
   resolution_range = c(0.1, 2),
-  resolution_step = 0.01
+  resolution_step = 0.05,
+  silentwookie = FALSE
 )
 }
 \arguments{
