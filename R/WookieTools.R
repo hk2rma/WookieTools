@@ -1,4 +1,4 @@
-# WookieTools - Version 0.8.6.1
+# WookieTools - Version 0.1A
 
 # Seurat Object Quality Control function
 #' @name wookieqc
@@ -21,7 +21,7 @@
 #' @param silentwookie stop wookie from printing puns, default is FALSE
 #' @return Seurat object after quality control
 #' @export
-wookie_qc <- function(seurat_obj, nf_min = 0, nf_max = 20000,
+wookieQc <- function(seurat_obj, nf_min = 0, nf_max = 20000,
                       nc_max = 200000, nc_min = 0, pmt = 20,
                       ptr_max = NULL, ptr_min = NULL, species = 'Mouse',
                       pt.size = NULL, legend = TRUE,silentwookie = FALSE) {
@@ -101,7 +101,7 @@ wookie_qc <- function(seurat_obj, nf_min = 0, nf_max = 20000,
   
 }
 
-#' @name wookie_umapWizard
+#' @name wookieUmapWizard
 #' @title Plot UMAPs to test features, min.dist values, and dimensions
 #' @import Seurat
 #' @import ggplot2
@@ -121,7 +121,7 @@ wookie_qc <- function(seurat_obj, nf_min = 0, nf_max = 20000,
 #' @description Plot multiple UMAPs to test features, min.dist values, or dimensions
 #' @return Combined UMAP plot
 #' @export
-wookie_umapWizard <- function(object = seu_obj, features = NULL,
+wookieUmapWizard <- function(object = seu_obj, features = NULL,
                               min.dist = 0.3, max_features = 3000,
                               ftype = 'HVG', step = 500,
                               out_name = 'combined_umap', silentwookie = FALSE,
@@ -202,7 +202,7 @@ wookie_umapWizard <- function(object = seu_obj, features = NULL,
 }
 
 
-#' @name wookie_featureplot
+#' @name wookieFeatureplot
 #' @title Plot multiple features with color map
 #' @import Seurat
 #' @import ggplot2
@@ -238,7 +238,7 @@ wookie_umapWizard <- function(object = seu_obj, features = NULL,
 #' @param silentwookie stop wookie from printing puns, default is FALSE
 #' @return Plot grid
 #' @export
-wookie_featureplot <- function(seuratObject, featureList, ncol = 3,
+wookieFeatureplot <- function(seuratObject, featureList, ncol = 3,
                                pt.size = 1, split_by = NULL, alpha = 1,
                                order = FALSE, dims = c(1,2),
                                min.cutoff = NA, max.cutoff = NA,
@@ -295,7 +295,7 @@ wookie_featureplot <- function(seuratObject, featureList, ncol = 3,
 
 
 # Function to filter particular cell types based on marker gene expression
-#' @name wookie_filter_celltype
+#' @name wookieFilterCelltype
 #' @title Filter particular cell types based on marker gene expression
 #' @import Seurat
 #' @import patchwork
@@ -309,7 +309,7 @@ wookie_featureplot <- function(seuratObject, featureList, ncol = 3,
 #' @param silentwookie stop wookie from printing puns, default is FALSE
 #' @return Filtered Seurat object
 #' @export
-wookie_filter_celltype <- function(seurat_obj, marker_list, cutoff = 0.99,silentwookie = FALSE) {
+wookieFilterCelltype <- function(seurat_obj, marker_list, cutoff = 0.99,silentwookie = FALSE) {
   print('Ensure marker genes are in RNA$scale.data')
   
   expression_matrix_transposed <- t(seurat_obj@assays$RNA$scale.data)
@@ -331,7 +331,7 @@ wookie_filter_celltype <- function(seurat_obj, marker_list, cutoff = 0.99,silent
 }
 
 # Function to plot QC metrics of a sparse matrix
-#' @name wookie_matrix_qc
+#' @name wookieMatrixQc
 #' @title Plot QC metrics of a sparse matrix
 #' @import Seurat
 #' @import patchwork
@@ -344,7 +344,7 @@ wookie_filter_celltype <- function(seurat_obj, marker_list, cutoff = 0.99,silent
 #' @param silentwookie stop wookie from printing puns, default is FALSE
 #' @return QC plot
 #' @export
-wookie_matrix_qc <- function(count_matrix_sparse, fill_color = "#589FFF", 
+wookieMatrixQc <- function(count_matrix_sparse, fill_color = "#589FFF", 
                              title = "",silentwookie = FALSE) {
   reads_per_cell <- Matrix::colSums(count_matrix_sparse)
   genes_per_cell <- Matrix::colSums(count_matrix_sparse > 0)
@@ -396,7 +396,7 @@ wookie_matrix_qc <- function(count_matrix_sparse, fill_color = "#589FFF",
 }
 
 # Function to compare Log Normalisation and SCT (Histogram)
-#' @name wookie_ge_histogram
+#' @name wookieGEhistogram
 #' @title Compare Log Normalisation and SCT (Histogram)
 #' @import Seurat
 #' @import patchwork
@@ -407,7 +407,7 @@ wookie_matrix_qc <- function(count_matrix_sparse, fill_color = "#589FFF",
 #' @param silentwookie stop wookie from printing puns, default is FALSE
 #' @return Histogram comparing Log Normalisation and SCT
 #' @export
-wookie_ge_histogram <- function(seurat_obj,silentwookie = FALSE) {
+wookieGEhistogram <- function(seurat_obj,silentwookie = FALSE) {
   expression_data_RNA <- as.vector(GetAssayData(seurat_obj, assay = "RNA", layer = "scale.data"))
   expression_data_SCT <- as.vector(GetAssayData(seurat_obj, assay = "SCT", layer = "scale.data"))
   
@@ -437,7 +437,7 @@ wookie_ge_histogram <- function(seurat_obj,silentwookie = FALSE) {
 }
 
 # Function to get optimal number of PCs
-#' @name wookie_get_pc 
+#' @name wookieGetPC 
 #' @title Get Optimal Number of PCs
 #' @import Seurat
 #' @description Get the optimal number of principal components to use
@@ -446,7 +446,7 @@ wookie_ge_histogram <- function(seurat_obj,silentwookie = FALSE) {
 #' @param silentwookie stop wookie from printing puns, default is FALSE
 #' @return Number of PCs to use
 #' @export
-wookie_get_pc <- function(seurat_obj, reduction = 'pca',silentwookie = FALSE) {
+wookieGetPC <- function(seurat_obj, reduction = 'pca',silentwookie = FALSE) {
   pct <- seurat_obj[[reduction]]@stdev / sum(seurat_obj[[reduction]]@stdev) * 100
   cumu <- cumsum(pct)
   
@@ -462,10 +462,56 @@ wookie_get_pc <- function(seurat_obj, reduction = 'pca',silentwookie = FALSE) {
 
 
 # Function to create a plot for a given Seurat object
-#' @name wookie_fc_hist 
-#' @title histograms of nFeature and nCounts
+#' @name wookiePlotQCMetrics 
+#' @title Plot Count v Features with percentage mito
 #' @import Seurat
 #' @import patchwork
+#' @import data.table
+#' @import viridis
+#' @import ggplot2
+#' @import cowplot
+#' @description Plot Count v Features with percentage mito
+#' @param seu Seurat Object
+#' @param size size geom
+#' @param pmt mito cutoff
+#' @param limits milimits for ggplot
+#' @param alpha geom alpha
+#' @param silentwookie stop wookie from printing puns, default is FALSE
+#' @return plot
+#' @export
+wookiePlotQCMetrics <- function(seu, limits = c(50, 20000), pmt = 15, size = 0.2, alpha = 0.9, silentwookie = FALSE){
+  dt <- seu@meta.data
+  dt$mt_category <- ifelse(dt$percent.mt > pmt, paste0(">", pmt), paste0("<", pmt))
+  
+  p1 <- ggplot(dt, aes(x = nCount_RNA, y = nFeature_RNA, color = percent.mt)) +
+    geom_point(size = size, alpha = alpha) +
+    scale_colour_viridis(option = "G", direction = -1) +
+    scale_x_continuous(limits = limits, trans = "log10") +
+    scale_y_continuous(limits = limits, trans = "log10") +
+    theme_bw()
+  
+  mt_labels <- c(paste0("<", pmt), paste0(">", pmt))
+  p2 <- ggplot(dt, aes(x = nCount_RNA, y = nFeature_RNA, color = mt_category)) +
+    geom_point(size = size, alpha = alpha) +
+    scale_color_manual(values = setNames(c("blue", "red"), mt_labels)) +
+    scale_x_continuous(limits = limits, trans = "log10") +
+    scale_y_continuous(limits = limits, trans = "log10") +
+    theme_bw()
+  
+  combined_plot <- p1 + p2
+  if (silentwookie == FALSE){
+    wookieSay()
+  }
+  print(combined_plot)
+}
+
+# Function to create a plot for a given Seurat object
+#' @name wookiePlotQCHistogram
+#' @title Plot Count v Features with percentage mito
+#' @import Seurat
+#' @import patchwork
+#' @import data.table
+#' @import viridis
 #' @import ggplot2
 #' @import cowplot
 #' @description Get histograms of nFeature and nCounts and possible thresholds
@@ -473,34 +519,41 @@ wookie_get_pc <- function(seurat_obj, reduction = 'pca',silentwookie = FALSE) {
 #' @param title title of the plot
 #' @param fi features threshold
 #' @param ci counts threshold 
+#' @param bins bins
 #' @param silentwookie stop wookie from printing puns, default is FALSE
 #' @return plot
 #' @export
-wookie_fc_hist <- function(seurat_obj, title = 'Histogram', fi = 0, ci = 0,silentwookie = FALSE) {
+wookiePlotQCHistogram <- function(seurat_obj, title = 'Histogram', fi = 0, ci = 0, mi =0, ri = 0, bins = 300) {
   # Extract data
-  data <- FetchData(seurat_obj, vars = c("nFeature_RNA", "nCount_RNA"))
+  data <- as.data.table(seurat_obj@meta.data)
   
   # Create histograms using ggplot2
   p1 <- ggplot(data, aes(x = nFeature_RNA)) +
-    geom_histogram(bins = 100, fill = "#06125F") +
+    geom_histogram(bins = bins, fill = viridis(bins)) +
     geom_vline(xintercept = fi, color = "#FF0909", linetype = "dashed") +
     ggtitle(paste(title, "- Features"))
   
   p2 <- ggplot(data, aes(x = nCount_RNA)) +
-    geom_histogram(bins = 100, fill = "#06125F") +
+    geom_histogram(bins = bins, fill = viridis(bins)) +
     geom_vline(xintercept = ci, color = "#FF0909", linetype = "dashed") +
     ggtitle(paste(title, "- Counts"))
+  p3 <- ggplot(data, aes(x = percent.mt)) +
+    geom_histogram(bins = bins, fill = viridis(bins)) +
+    geom_vline(xintercept = mi, color = "#FF0909", linetype = "dashed") +
+    ggtitle(paste(title, "- percent mito"))
   
-  if (silentwookie == FALSE){
-    wookieSay()
-  }
+  p4 <- ggplot(data, aes(x = percent.ribo)) +
+    geom_histogram(bins = bins, fill = viridis(bins)) +
+    geom_vline(xintercept = ri, color = "#FF0909", linetype = "dashed") +
+    ggtitle(paste(title, "- percent ribo"))
+  
   # Return combined plot for each seurat object
-  return(p1 + p2 + plot_layout(ncol = 2))
+  return(p1 + p2 + p3 + p4 + plot_layout(ncol = 2))
   
 }
 
 # Function to plot multiple features with color map
-#' @name wookie_dotplot
+#' @name wookieDotplot
 #' @title Plot dotplots with color map
 #' @import Seurat
 #' @import ggplot2
@@ -528,7 +581,7 @@ wookie_dotplot <- function(seurat_obj, feature_list , assay = 'RNA',
 
 
 # Function to plot Cluster relationship Tree
-#' @name wookie_clustertree
+#' @name wookieClustertree
 #' @title Function to plot Cluster relationship Tree
 #' @import Seurat
 #' @import ggplot2
@@ -548,7 +601,7 @@ wookie_dotplot <- function(seurat_obj, feature_list , assay = 'RNA',
 #' @param silentwookie stop wookie from printing puns, default is FALSE
 #' @return p
 #' @export
-wookie_clustertree <- function(seurat_obj, dims = NULL, features = NULL, reorder = FALSE ,
+wookieClustertree <- function(seurat_obj, dims = NULL, features = NULL, reorder = FALSE ,
                                reorder.numeric = FALSE, saveplot = FALSE,assay = 'RNA',
                                reduction = 'pca', slot = 'data',
                                dpi = 1080, height = 10, width = 10, units = 'cm',
@@ -587,7 +640,7 @@ wookie_clustertree <- function(seurat_obj, dims = NULL, features = NULL, reorder
 
 
 # Function to plot expression per cluster
-#' @name wookie_pcePlot
+#' @name wookiePcePlot
 #' @title Function to plot expression per cluster
 #' @import Seurat
 #' @import ggplot2
@@ -603,7 +656,7 @@ wookie_clustertree <- function(seurat_obj, dims = NULL, features = NULL, reorder
 #' @param silentwookie stop wookie from printing puns, default is FALSE
 #' @return pce_plot
 #' @export
-wookie_pcePlot <- function(seurat, seurat_clusters= 'seurat_clusters' ,
+wookiePcePlot <- function(seurat, seurat_clusters= 'seurat_clusters' ,
   saveplot = FALSE,dpi = 1080, height = 10, width = 10, units = 'cm',
   silentwookie = FALSE){
   
@@ -674,7 +727,7 @@ wookie_pcePlot <- function(seurat, seurat_clusters= 'seurat_clusters' ,
 
 
 # Function to plot silhouette scores
-#' @name wookie_silhouettePlot
+#' @name wookieSilhouettePlot
 #' @title Function to plot silhouette scores for each cluster
 #' @import Seurat
 #' @import ggplot2
@@ -687,7 +740,7 @@ wookie_pcePlot <- function(seurat, seurat_clusters= 'seurat_clusters' ,
 #' @param silentwookie stop wookie from printing puns, default is FALSE
 #' @return silhouette plot
 #' @export
-wookie_silhouettePlot <- function(seurat,cluster = 'seurat_clusters',dims = 1:30,
+wookieSilhouettePlot <- function(seurat,cluster = 'seurat_clusters',dims = 1:30,
                                   reduction = 'pca',silentwookie = FALSE){
   seurat$seurat_clusters <- seurat[[cluster]]
   distance_matrix <- dist(Embeddings(seurat[[reduction]])[, dims])
@@ -732,7 +785,7 @@ wookie_silhouettePlot <- function(seurat,cluster = 'seurat_clusters',dims = 1:30
 
 
 # Function to plot Jaccard similarity index
-#' @name wookie_jaccardPlot
+#' @name wookieJaccardPlot
 #' @title Function to plot Jaccard similarity index
 #' @import Seurat
 #' @import reshape2
@@ -758,7 +811,7 @@ wookie_silhouettePlot <- function(seurat,cluster = 'seurat_clusters',dims = 1:30
 #' @param silentwookie stop wookie from printing puns, default is FALSE
 #' @return plot Jaccard similarity index
 #' @export
-wookie_jaccardPlot <- function(seurat_obj,clusters = 'seurat_clusters',
+wookieJaccardPlot <- function(seurat_obj,clusters = 'seurat_clusters',
                                logfc.threshold = 0.95,
                                min.pct = 0.25,
                                test.use = "wilcox",
@@ -842,7 +895,7 @@ wookie_jaccardPlot <- function(seurat_obj,clusters = 'seurat_clusters',
 }
 
 # Function to get qc stats
-#' @name wookie_get_filters
+#' @name wookieGetFilters
 #' @title Function to get qc filters
 #' @import Seurat
 #' @description Function to get filters, to get data which lies between the mean and +/- multiplier value times SD of the distribution 
@@ -850,7 +903,7 @@ wookie_jaccardPlot <- function(seurat_obj,clusters = 'seurat_clusters',
 #' @param multiplier default is 2 i.e 2 times SD
 #' @param silentwookie stop wookie from printing puns, default is FALSE
 #' @export
-wookie_get_filters <- function(seurat_obj, multiplier = 2,silentwookie = FALSE){
+wookieGetFilters <- function(seurat_obj, multiplier = 2,silentwookie = FALSE){
   ## Get filtering parameters
   count.max <- round(mean(seurat_obj$nCount_RNA) +
                        multiplier * sd(seurat_obj$nCount_RNA), digits = -2)
@@ -881,7 +934,7 @@ wookie_get_filters <- function(seurat_obj, multiplier = 2,silentwookie = FALSE){
 }
 
 # Function to annotate cells given a nested list of marker genes
-#' @name wookie_annotate
+#' @name wookieAnnotate
 #' @title Function to plot cluster Similarity
 #' @import Seurat
 #' @import viridis
@@ -896,7 +949,7 @@ wookie_get_filters <- function(seurat_obj, multiplier = 2,silentwookie = FALSE){
 #' @param silentwookie stop wookie from printing puns, default is FALSE
 #' @return object
 #' @export
-wookie_annotate <- function(object, marker_gene_list, threshold = 0,silentwookie = FALSE) {
+wookieAnnotate <- function(object, marker_gene_list, threshold = 0,silentwookie = FALSE) {
   # Score cells based on marker gene sets
   object <- AddModuleScore(
     object = object,
@@ -992,7 +1045,7 @@ wookie_annotate <- function(object, marker_gene_list, threshold = 0,silentwookie
 
 
 # Function to plot entropy of a batch across clusters to evaluate mixing between batches
-#' @name wookie_batch_entropy
+#' @name wookieBatchEntropy
 #' @title Function to plot entropy of a batch
 #' @import Seurat
 #' @import viridis
@@ -1005,7 +1058,7 @@ wookie_annotate <- function(object, marker_gene_list, threshold = 0,silentwookie
 #' @param silentwookie stop wookie from printing puns, default is FALSE
 #' @return plot
 #' @export
-wookie_batch_entropy <- function(seurat_obj, batch.key = "batch", cluster.key = 'seurat_clusters',silentwookie = FALSE) {
+wookieBatchEntropy <- function(seurat_obj, batch.key = "batch", cluster.key = 'seurat_clusters',silentwookie = FALSE) {
   
   # Assign temporary cluster identities
   seurat_obj$temp.clusters <- seurat_obj[[cluster.key]]
@@ -1043,7 +1096,7 @@ wookie_batch_entropy <- function(seurat_obj, batch.key = "batch", cluster.key = 
 
 
 # Function to plot number of clusters across a set of resolutions
-#' @name wookie_find_resolution
+#' @name wookieFindResolution
 #' @title Function to plot number of clusters per resolution
 #' @import Seurat
 #' @import ggplot2
@@ -1055,7 +1108,7 @@ wookie_batch_entropy <- function(seurat_obj, batch.key = "batch", cluster.key = 
 #' @param silentwookie stop wookie from printing puns, default is FALSE
 #' @return plot
 #' @export
-wookie_find_resolution <- function(seurat_obj, algorithm = 1,
+wookieFindResolution <- function(seurat_obj, algorithm = 1,
                                    resolution_range = c(0.1, 2),
                                    resolution_step = 0.05,
                                    silentwookie = FALSE) {
@@ -1086,7 +1139,7 @@ wookie_find_resolution <- function(seurat_obj, algorithm = 1,
 
 
 # Function to plot shared neighbors per batch
-#' @name wookie_evaluate_batch_correction
+#' @name wookieEvaluateBatchCorrection
 #' @title Function to plot shared neighbours per batch
 #' @import Seurat
 #' @import ggplot2
@@ -1104,7 +1157,7 @@ wookie_find_resolution <- function(seurat_obj, algorithm = 1,
 #' @param silentwookie stop wookie from printing puns, default is FALSE
 #' @return plot
 #' @export
-wookie_evaluate_batch_correction <- function(seurat_obj, reduction = 'harmony',
+wookieEvaluateBatchCorrection <- function(seurat_obj, reduction = 'harmony',
                                       batch_col = NULL, group_by_cluster = FALSE, 
                                       cluster_col = NULL,k.param = 20,
                                       silentwookie = FALSE) {
