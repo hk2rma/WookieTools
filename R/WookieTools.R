@@ -1,4 +1,4 @@
-# WookieTools - Version 0.1A
+# WookieTools - Version 0.1
 
 # Seurat Object Quality Control function
 #' @name wookieqc
