@@ -2,10 +2,9 @@
 % Please edit documentation in R/WookieTools.R
 \name{wookieDotplot}
 \alias{wookieDotplot}
-\alias{wookie_dotplot}
 \title{Plot dotplots with color map}
 \usage{
-wookie_dotplot(
+wookieDotplot(
   seurat_obj,
   feature_list,
   assay = "RNA",

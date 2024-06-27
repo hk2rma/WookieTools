@@ -11,7 +11,9 @@ wookiePlotQCHistogram(
   ci = 0,
   mi = 0,
   ri = 0,
-  bins = 300
+  bins = 300,
+  log.counts = FALSE,
+  silentwookie = FALSE
 )
 }
 \arguments{
@@ -24,6 +26,8 @@ wookiePlotQCHistogram(
 \item{ci}{counts threshold}
 
 \item{bins}{bins}
+
+\item{log.counts}{Boolean to transform nCount to log scale}
 
 \item{silentwookie}{stop wookie from printing puns, default is FALSE}
 }

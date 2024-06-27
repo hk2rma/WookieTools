@@ -33,7 +33,8 @@ wookieFeatureplot(
   raster = NULL,
   raster.dpi = c(512, 512),
   silentwookie = FALSE,
-  cells = NULL
+  cells = NULL,
+  palette = c("#DCDCDC", "yellow", "orange", "red", "#8b0000")
 )
 }
 \arguments{
@@ -92,6 +93,8 @@ wookieFeatureplot(
 \item{silentwookie}{stop wookie from printing puns, default is FALSE}
 
 \item{cells}{which cells to plot deafult is null}
+
+\item{palette}{Colour Palette}
 }
 \value{
 Plot grid
