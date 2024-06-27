@@ -1,4 +1,4 @@
-# WookieTools - Version 0.1
+# WookieTools - Version 0.1.1
 
 # Seurat Object Quality Control function
 #' @name wookieqc
@@ -210,6 +210,7 @@ wookieUmapWizard <- function(object = seu_obj, features = NULL,
 #' @description Plot multiple features with custom color scale
 #' @param seuratObject Seurat object
 #' @param featureList List of features to plot
+#' @param palette Colour Palette
 #' @param ncol Number of columns for arrangement
 #' @param pt.size Point size for plotting
 #' @param split_by Variable for splitting
@@ -250,7 +251,7 @@ wookieFeatureplot <- function(seuratObject, featureList, ncol = 3,
                                coord.fixed = FALSE, by.col = TRUE,
                                sort.cell = deprecated(), interactive = FALSE,
                                combine = TRUE, raster = NULL,
-                               raster.dpi = c(512, 512), silentwookie = FALSE, cells = NULL) {
+                               raster.dpi = c(512, 512), silentwookie = FALSE, cells = NULL, palette = c("#DCDCDC", "yellow", "orange", "red", "#8b0000")) {
   suppressMessages({
     plotList <- lapply(featureList, function(feature) {
       FeaturePlot(object = seuratObject, features = feature, dims = dims,
@@ -278,7 +279,7 @@ wookieFeatureplot <- function(seuratObject, featureList, ncol = 3,
                   raster = raster,
                   raster.dpi = raster.dpi,cells = cells) +
         theme(aspect.ratio = 1) +
-        scale_color_gradientn(colours = c("#DCDCDC", "yellow", "orange", "red", "#8b0000"))
+        scale_color_gradientn(colours = palette)
     })
     # Suppress messages from the grid.arrange function
     
@@ -519,11 +520,12 @@ wookiePlotQCMetrics <- function(seu, limits = c(50, 20000), pmt = 15, size = 0.2
 #' @param title title of the plot
 #' @param fi features threshold
 #' @param ci counts threshold 
+#' @param log.counts Boolean to transform nCount to log scale
 #' @param bins bins
 #' @param silentwookie stop wookie from printing puns, default is FALSE
 #' @return plot
 #' @export
-wookiePlotQCHistogram <- function(seurat_obj, title = 'Histogram', fi = 0, ci = 0, mi =0, ri = 0, bins = 300) {
+wookiePlotQCHistogram <- function(seurat_obj, title = 'Histogram', fi = 0, ci = 0, mi =0, ri = 0, bins = 300, log.counts = FALSE, silentwookie = FALSE) {
   # Extract data
   data <- as.data.table(seurat_obj@meta.data)
   
@@ -532,11 +534,19 @@ wookiePlotQCHistogram <- function(seurat_obj, title = 'Histogram', fi = 0, ci = 
     geom_histogram(bins = bins, fill = viridis(bins)) +
     geom_vline(xintercept = fi, color = "#FF0909", linetype = "dashed") +
     ggtitle(paste(title, "- Features"))
-  
+  if(log.counts){
+  p2 <- ggplot(data, aes(x = nCount_RNA)) +
+    geom_histogram(bins = bins, fill = viridis(bins)) +
+    geom_vline(xintercept = ci, color = "#FF0909", linetype = "dashed") +
+    ggtitle(paste(title, "-log Counts"))+
+    scale_x_log10()
+  }else{
   p2 <- ggplot(data, aes(x = nCount_RNA)) +
     geom_histogram(bins = bins, fill = viridis(bins)) +
     geom_vline(xintercept = ci, color = "#FF0909", linetype = "dashed") +
     ggtitle(paste(title, "- Counts"))
+  }
+  
   p3 <- ggplot(data, aes(x = percent.mt)) +
     geom_histogram(bins = bins, fill = viridis(bins)) +
     geom_vline(xintercept = mi, color = "#FF0909", linetype = "dashed") +
@@ -546,6 +556,10 @@ wookiePlotQCHistogram <- function(seurat_obj, title = 'Histogram', fi = 0, ci = 
     geom_histogram(bins = bins, fill = viridis(bins)) +
     geom_vline(xintercept = ri, color = "#FF0909", linetype = "dashed") +
     ggtitle(paste(title, "- percent ribo"))
+  
+  if (silentwookie == FALSE){
+    wookieSay()
+  }
   
   # Return combined plot for each seurat object
   return(p1 + p2 + p3 + p4 + plot_layout(ncol = 2))
@@ -567,7 +581,7 @@ wookiePlotQCHistogram <- function(seurat_obj, title = 'Histogram', fi = 0, ci = 
 #' @param silentwookie stop wookie from printing puns, default is FALSE
 #' @return Pdotplot
 #' @export
-wookie_dotplot <- function(seurat_obj, feature_list , assay = 'RNA',
+wookieDotplot <- function(seurat_obj, feature_list , assay = 'RNA',
                            scale.by = 'size', tag = 'DotPlot',silentwookie = FALSE){
   dp <- DotPlot(seurat_obj, features = feature_list, assay = assay,scale.by = scale.by) +
     coord_flip()+
