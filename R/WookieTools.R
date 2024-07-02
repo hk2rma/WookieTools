@@ -1,4 +1,4 @@
-# WookieTools - Version 0.1.1
+# WookieTools - Version 0.1.2
 
 # Seurat Object Quality Control function
 #' @name wookieqc
@@ -289,7 +289,7 @@ wookieFeatureplot <- function(seuratObject, featureList, ncol = 3,
   if (!silentwookie) {
     wookieSay()
   }
-  
+  return(fplot)
 }
 
 
