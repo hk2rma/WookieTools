@@ -2,10 +2,10 @@
 % Please edit documentation in R/WookieTools.R
 \name{wookieqc}
 \alias{wookieqc}
-\alias{wookie_qc}
+\alias{wookieQc}
 \title{Seurat Object Quality Control function}
 \usage{
-wookie_qc(
+wookieQc(
   seurat_obj,
   nf_min = 0,
   nf_max = 20000,

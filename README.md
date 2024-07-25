@@ -1,5 +1,5 @@
 Wookie Tools
-Version 0.8.5.2
+Version 0.1.21A
 
 Handy Tools for Single Cell RNA-Seq Analysis
 
@@ -16,4 +16,12 @@ if (!requireNamespace("WookieTools", quietly = TRUE)) {
 library(Seurat)
 library(WookieTools)
 
+```
+
+Note:
+To Install the development version, which has the latest features and fixes:
+```{r, install dev branch}
+if (!requireNamespace("WookieTools", quietly = TRUE)) {
+  devtools::install_github("hk2rma/WookieTools@babywookie")
+}
 ```

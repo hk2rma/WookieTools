@@ -1,4 +1,4 @@
-# WookieTools - Version 0.8.5.2
+# WookieTools - Version 0.1.21
 
 # Seurat Object Quality Control function
 #' @name wookieqc
@@ -21,7 +21,7 @@
 #' @param silentwookie stop wookie from printing puns, default is FALSE
 #' @return Seurat object after quality control
 #' @export
-wookie_qc <- function(seurat_obj, nf_min = 0, nf_max = 20000,
+wookieQc <- function(seurat_obj, nf_min = 0, nf_max = 20000,
                       nc_max = 200000, nc_min = 0, pmt = 20,
                       ptr_max = NULL, ptr_min = NULL, species = 'Mouse',
                       pt.size = NULL, legend = TRUE,silentwookie = FALSE) {
@@ -101,7 +101,7 @@ wookie_qc <- function(seurat_obj, nf_min = 0, nf_max = 20000,
   
 }
 
-#' @name wookie_umapWizard
+#' @name wookieUmapWizard
 #' @title Plot UMAPs to test features, min.dist values, and dimensions
 #' @import Seurat
 #' @import ggplot2
@@ -121,12 +121,12 @@ wookie_qc <- function(seurat_obj, nf_min = 0, nf_max = 20000,
 #' @description Plot multiple UMAPs to test features, min.dist values, or dimensions
 #' @return Combined UMAP plot
 #' @export
-wookie_umapWizard <- function(object = seu_obj, features = NULL,
-                                                 min.dist = 0.3, max_features = 3000,
-                                                 ftype = 'HVG', step = 500,
-                                                 out_name = 'combined_umap', silentwookie = FALSE,
-                                                 mode = 'features', reduction = 'pca',
-                                                 max_dims = 30, dims_step = 5) {
+wookieUmapWizard <- function(object = seu_obj, features = NULL,
+                              min.dist = 0.3, max_features = 3000,
+                              ftype = 'HVG', step = 500,
+                              out_name = 'combined_umap', silentwookie = FALSE,
+                              mode = 'features', reduction = 'pca',
+                              max_dims = 30, dims_step = 5,nn_min = 10, nn_max = 50, nn_step = 10) {
   if (mode == 'features') {
     if (is.null(features)) {
       stop("Features must be provided for the 'features' mode.")
@@ -138,7 +138,7 @@ wookie_umapWizard <- function(object = seu_obj, features = NULL,
     for (feature_length in seq(500, max_features, step)) {
       current_features <- features[1:feature_length]
       cat(paste0('Calculating UMAP at ', ftype, ':', feature_length))
-      current_umap <- RunUMAP(object, features = current_features, min.dist = min.dist)
+      current_umap <- RunUMAP(object, features = current_features, min.dist = min.dist,n.neighbors = nn_max)
       current_plot <- DimPlot(current_umap, reduction = 'umap') +
         ggtitle(paste('UMAP ', ftype, feature_length))
       plot_list[[length(plot_list) + 1]] <- current_plot
@@ -154,7 +154,7 @@ wookie_umapWizard <- function(object = seu_obj, features = NULL,
                                 min.dist = current_min_dist, reduction = reduction)
       } else if (!is.null(features)) {
         current_umap <- RunUMAP(object, features = features,
-                                min.dist = current_min_dist, reduction = reduction)
+                                min.dist = current_min_dist, reduction = reduction,n.neighbors = nn_max)
       } else {
         stop("Either features or dims must be provided for the 'min.dist' mode.")
       }
@@ -169,15 +169,27 @@ wookie_umapWizard <- function(object = seu_obj, features = NULL,
     for (current_dims in seq(dims_step, max_dims, dims_step)) {
       cat(paste0('Calculating UMAP at dims:', current_dims, '...'))
       current_umap <- RunUMAP(object, features = NULL,
-                              dims = 1:current_dims, min.dist = min.dist, reduction = reduction)
+                              dims = 1:current_dims, min.dist = min.dist, reduction = reduction,n.neighbors = nn_max)
       current_plot <- DimPlot(current_umap, reduction = 'umap') +
         ggtitle(paste('UMAP: dims:', current_dims))
       plot_list[[length(plot_list) + 1]] <- current_plot
       cat("Done.\n")
     }
     combined_plot <- plot_grid(plotlist = plot_list)
-  } else {
-    stop("Invalid mode. Mode should be either 'features', 'min.dist', or 'dims'.")
+  } else if (mode == 'n.neighbors') {
+    plot_list <- list()
+    for (current_nn in seq(nn_min, nn_max, nn_step)) {
+      cat(paste0('Calculating UMAP at n.neighbors:', current_nn, '...'))
+      current_umap <- RunUMAP(object, features = NULL,
+                              dims = 1:max_dims, min.dist = min.dist,n.neighbors = current_nn,reduction = reduction)
+      current_plot <- DimPlot(current_umap, reduction = 'umap') +
+        ggtitle(paste('UMAP: nn:', current_nn))
+      plot_list[[length(plot_list) + 1]] <- current_plot
+      cat("Done.\n")
+    }
+    combined_plot <- plot_grid(plotlist = plot_list)
+  }else {
+    stop("Invalid mode. Mode should be either 'features', 'min.dist','n.neighbors',or 'dims'.")
   }
   
   assign(out_name, combined_plot, envir = globalenv())
@@ -190,7 +202,7 @@ wookie_umapWizard <- function(object = seu_obj, features = NULL,
 }
 
 
-#' @name wookie_featureplot
+#' @name wookieFeatureplot
 #' @title Plot multiple features with color map
 #' @import Seurat
 #' @import ggplot2
@@ -198,6 +210,7 @@ wookie_umapWizard <- function(object = seu_obj, features = NULL,
 #' @description Plot multiple features with custom color scale
 #' @param seuratObject Seurat object
 #' @param featureList List of features to plot
+#' @param palette Colour Palette
 #' @param ncol Number of columns for arrangement
 #' @param pt.size Point size for plotting
 #' @param split_by Variable for splitting
@@ -226,7 +239,7 @@ wookie_umapWizard <- function(object = seu_obj, features = NULL,
 #' @param silentwookie stop wookie from printing puns, default is FALSE
 #' @return Plot grid
 #' @export
-wookie_featureplot <- function(seuratObject, featureList, ncol = 3,
+wookieFeatureplot <- function(seuratObject, featureList, ncol = 3,
                                pt.size = 1, split_by = NULL, alpha = 1,
                                order = FALSE, dims = c(1,2),
                                min.cutoff = NA, max.cutoff = NA,
@@ -238,7 +251,7 @@ wookie_featureplot <- function(seuratObject, featureList, ncol = 3,
                                coord.fixed = FALSE, by.col = TRUE,
                                sort.cell = deprecated(), interactive = FALSE,
                                combine = TRUE, raster = NULL,
-                               raster.dpi = c(512, 512), silentwookie = FALSE, cells = NULL) {
+                               raster.dpi = c(512, 512), silentwookie = FALSE, cells = NULL, palette = c("#DCDCDC", "yellow", "orange", "red", "#8b0000")) {
   suppressMessages({
     plotList <- lapply(featureList, function(feature) {
       FeaturePlot(object = seuratObject, features = feature, dims = dims,
@@ -266,7 +279,7 @@ wookie_featureplot <- function(seuratObject, featureList, ncol = 3,
                   raster = raster,
                   raster.dpi = raster.dpi,cells = cells) +
         theme(aspect.ratio = 1) +
-        scale_color_gradientn(colours = c("#DCDCDC", "yellow", "orange", "red", "#8b0000"))
+        scale_color_gradientn(colours = palette)
     })
     # Suppress messages from the grid.arrange function
     
@@ -276,20 +289,17 @@ wookie_featureplot <- function(seuratObject, featureList, ncol = 3,
   if (!silentwookie) {
     wookieSay()
   }
-  
+  return(fplot)
 }
 
 
 
 
 # Function to filter particular cell types based on marker gene expression
-#' @name wookie_filter_celltype
+#' @name wookieFilterCelltype
 #' @title Filter particular cell types based on marker gene expression
 #' @import Seurat
-#' @import patchwork
-#' @import tidyr
-#' @import Matrix
-#' @import dplyr
+#' @import dplyr 
 #' @description Remove specific cell types based on marker gene expression
 #' @param seurat_obj Seurat object
 #' @param marker_list List of marker genes for the cell type to remove
@@ -297,29 +307,31 @@ wookie_featureplot <- function(seuratObject, featureList, ncol = 3,
 #' @param silentwookie stop wookie from printing puns, default is FALSE
 #' @return Filtered Seurat object
 #' @export
-wookie_filter_celltype <- function(seurat_obj, marker_list, cutoff = 0.99,silentwookie = FALSE) {
+wookieFilterCelltype <- function(seurat_obj, marker_list, cutoff = 0.99, silentwookie = FALSE) {
   print('Ensure marker genes are in RNA$scale.data')
   
   expression_matrix_transposed <- t(seurat_obj@assays$RNA$scale.data)
-  seurat_obj$avg_celltype_expression <- rowMeans(expression_matrix_transposed[, marker_list,
-                                                                              drop = FALSE])
+  seurat_obj$avg_celltype_expression <- dplyr::rowMeans(expression_matrix_transposed[, marker_list, drop = FALSE])
   
   threshold <- quantile(seurat_obj$avg_celltype_expression, cutoff)
   
   cellstokeep <- which(seurat_obj$avg_celltype_expression <= threshold)
-  seu_filtered <- seurat_obj[, cellstokeep]
+  seu_filtered <- Seurat::subset(seurat_obj, cells = cellstokeep)
   cellstoremove <- which(seurat_obj$avg_celltype_expression > threshold)
-  seu_removed <- seurat_obj[, cellstoremove]
-  print(paste0(length(cellstokeep), ' Cells kept, ', 
-               length(cellstoremove), ' cells removed.'))
-  if (silentwookie == FALSE){
+  seu_removed <- Seurat::subset(seurat_obj, cells = cellstoremove)
+  
+  print(paste0(length(cellstokeep), ' Cells kept, ', length(cellstoremove), ' cells removed.'))
+  
+  if (!silentwookie) {
     wookieSay()
   }
+  
   return(seu_filtered)
 }
 
+
 # Function to plot QC metrics of a sparse matrix
-#' @name wookie_matrix_qc
+#' @name wookieMatrixQc
 #' @title Plot QC metrics of a sparse matrix
 #' @import Seurat
 #' @import patchwork
@@ -332,7 +344,7 @@ wookie_filter_celltype <- function(seurat_obj, marker_list, cutoff = 0.99,silent
 #' @param silentwookie stop wookie from printing puns, default is FALSE
 #' @return QC plot
 #' @export
-wookie_matrix_qc <- function(count_matrix_sparse, fill_color = "#589FFF", 
+wookieMatrixQc <- function(count_matrix_sparse, fill_color = "#589FFF", 
                              title = "",silentwookie = FALSE) {
   reads_per_cell <- Matrix::colSums(count_matrix_sparse)
   genes_per_cell <- Matrix::colSums(count_matrix_sparse > 0)
@@ -384,7 +396,7 @@ wookie_matrix_qc <- function(count_matrix_sparse, fill_color = "#589FFF",
 }
 
 # Function to compare Log Normalisation and SCT (Histogram)
-#' @name wookie_ge_histogram
+#' @name wookieGEhistogram
 #' @title Compare Log Normalisation and SCT (Histogram)
 #' @import Seurat
 #' @import patchwork
@@ -395,7 +407,7 @@ wookie_matrix_qc <- function(count_matrix_sparse, fill_color = "#589FFF",
 #' @param silentwookie stop wookie from printing puns, default is FALSE
 #' @return Histogram comparing Log Normalisation and SCT
 #' @export
-wookie_ge_histogram <- function(seurat_obj,silentwookie = FALSE) {
+wookieGEhistogram <- function(seurat_obj,silentwookie = FALSE) {
   expression_data_RNA <- as.vector(GetAssayData(seurat_obj, assay = "RNA", layer = "scale.data"))
   expression_data_SCT <- as.vector(GetAssayData(seurat_obj, assay = "SCT", layer = "scale.data"))
   
@@ -425,7 +437,7 @@ wookie_ge_histogram <- function(seurat_obj,silentwookie = FALSE) {
 }
 
 # Function to get optimal number of PCs
-#' @name wookie_get_pc 
+#' @name wookieGetPC 
 #' @title Get Optimal Number of PCs
 #' @import Seurat
 #' @description Get the optimal number of principal components to use
@@ -434,7 +446,7 @@ wookie_ge_histogram <- function(seurat_obj,silentwookie = FALSE) {
 #' @param silentwookie stop wookie from printing puns, default is FALSE
 #' @return Number of PCs to use
 #' @export
-wookie_get_pc <- function(seurat_obj, reduction = 'pca',silentwookie = FALSE) {
+wookieGetPC <- function(seurat_obj, reduction = 'pca',silentwookie = FALSE) {
   pct <- seurat_obj[[reduction]]@stdev / sum(seurat_obj[[reduction]]@stdev) * 100
   cumu <- cumsum(pct)
   
@@ -450,10 +462,58 @@ wookie_get_pc <- function(seurat_obj, reduction = 'pca',silentwookie = FALSE) {
 
 
 # Function to create a plot for a given Seurat object
-#' @name wookie_fc_hist 
-#' @title histograms of nFeature and nCounts
+#' @name wookiePlotQCMetrics 
+#' @title Plot Count v Features with percentage mito
 #' @import Seurat
 #' @import patchwork
+#' @import data.table
+#' @import viridis
+#' @import ggplot2
+#' @import cowplot
+#' @description Plot Count v Features with percentage mito
+#' @param seu Seurat Object
+#' @param size size geom
+#' @param pmt mito cutoff
+#' @param limits milimits for ggplot
+#' @param alpha geom alpha
+#' @param silentwookie stop wookie from printing puns, default is FALSE
+#' @return plot
+#' @export
+wookiePlotQCMetrics <- function(seu, limits = c(50, 20000), pmt = 15, size = 0.2, alpha = 0.9, silentwookie = FALSE) {
+  dt <- Seurat::Metadata(seu)
+  dt$mt_category <- ifelse(dt$percent.mt > pmt, paste0(">", pmt), paste0("<", pmt))
+  
+  p1 <- ggplot2::ggplot(dt, aes(x = nCount_RNA, y = nFeature_RNA, color = percent.mt)) +
+    ggplot2::geom_point(size = size, alpha = alpha) +
+    viridis::scale_colour_viridis(option = "G", direction = -1) +
+    ggplot2::scale_x_continuous(limits = limits, trans = "log10") +
+    ggplot2::scale_y_continuous(limits = limits, trans = "log10") +
+    ggplot2::theme_bw()
+  
+  mt_labels <- c(paste0("<", pmt), paste0(">", pmt))
+  p2 <- ggplot2::ggplot(dt, aes(x = nCount_RNA, y = nFeature_RNA, color = mt_category)) +
+    ggplot2::geom_point(size = size, alpha = alpha) +
+    ggplot2::scale_color_manual(values = setNames(c("blue", "red"), mt_labels)) +
+    ggplot2::scale_x_continuous(limits = limits, trans = "log10") +
+    ggplot2::scale_y_continuous(limits = limits, trans = "log10") +
+    ggplot2::theme_bw()
+  
+  combined_plot <- patchwork::wrap_plots(p1, p2)
+  
+  if (!silentwookie) {
+    wookieSay()
+  }
+  
+  print(combined_plot)
+}
+
+# Function to create a plot for a given Seurat object
+#' @name wookiePlotQCHistogram
+#' @title Plot Count v Features with percentage mito
+#' @import Seurat
+#' @import patchwork
+#' @import data.table
+#' @import viridis
 #' @import ggplot2
 #' @import cowplot
 #' @description Get histograms of nFeature and nCounts and possible thresholds
@@ -461,34 +521,54 @@ wookie_get_pc <- function(seurat_obj, reduction = 'pca',silentwookie = FALSE) {
 #' @param title title of the plot
 #' @param fi features threshold
 #' @param ci counts threshold 
+#' @param log.counts Boolean to transform nCount to log scale
+#' @param bins bins
 #' @param silentwookie stop wookie from printing puns, default is FALSE
 #' @return plot
 #' @export
-wookie_fc_hist <- function(seurat_obj, title = 'Histogram', fi = 0, ci = 0,silentwookie = FALSE) {
+wookiePlotQCHistogram <- function(seurat_obj, title = 'Histogram', fi = 0, ci = 0, mi =0, ri = 0, bins = 300, log.counts = FALSE, silentwookie = FALSE) {
   # Extract data
-  data <- FetchData(seurat_obj, vars = c("nFeature_RNA", "nCount_RNA"))
+  data <- data.table::as.data.table(seurat_obj@meta.data)
   
   # Create histograms using ggplot2
   p1 <- ggplot(data, aes(x = nFeature_RNA)) +
-    geom_histogram(bins = 100, fill = "#06125F") +
+    geom_histogram(bins = bins, fill = viridis(bins)) +
     geom_vline(xintercept = fi, color = "#FF0909", linetype = "dashed") +
     ggtitle(paste(title, "- Features"))
-  
+  if(log.counts){
   p2 <- ggplot(data, aes(x = nCount_RNA)) +
-    geom_histogram(bins = 100, fill = "#06125F") +
+    geom_histogram(bins = bins, fill = viridis(bins)) +
+    geom_vline(xintercept = ci, color = "#FF0909", linetype = "dashed") +
+    ggtitle(paste(title, "-log Counts"))+
+    scale_x_log10()
+  }else{
+  p2 <- ggplot(data, aes(x = nCount_RNA)) +
+    geom_histogram(bins = bins, fill = viridis(bins)) +
     geom_vline(xintercept = ci, color = "#FF0909", linetype = "dashed") +
     ggtitle(paste(title, "- Counts"))
+  }
+  
+  p3 <- ggplot(data, aes(x = percent.mt)) +
+    geom_histogram(bins = bins, fill = viridis(bins)) +
+    geom_vline(xintercept = mi, color = "#FF0909", linetype = "dashed") +
+    ggtitle(paste(title, "- percent mito"))
+  
+  p4 <- ggplot(data, aes(x = percent.ribo)) +
+    geom_histogram(bins = bins, fill = viridis(bins)) +
+    geom_vline(xintercept = ri, color = "#FF0909", linetype = "dashed") +
+    ggtitle(paste(title, "- percent ribo"))
   
   if (silentwookie == FALSE){
     wookieSay()
   }
+  
   # Return combined plot for each seurat object
-  return(p1 + p2 + plot_layout(ncol = 2))
+  return(p1 + p2 + p3 + p4 + plot_layout(ncol = 2))
   
 }
 
 # Function to plot multiple features with color map
-#' @name wookie_dotplot
+#' @name wookieDotplot
 #' @title Plot dotplots with color map
 #' @import Seurat
 #' @import ggplot2
@@ -502,7 +582,7 @@ wookie_fc_hist <- function(seurat_obj, title = 'Histogram', fi = 0, ci = 0,silen
 #' @param silentwookie stop wookie from printing puns, default is FALSE
 #' @return Pdotplot
 #' @export
-wookie_dotplot <- function(seurat_obj, feature_list , assay = 'RNA',
+wookieDotplot <- function(seurat_obj, feature_list , assay = 'RNA',
                            scale.by = 'size', tag = 'DotPlot',silentwookie = FALSE){
   dp <- DotPlot(seurat_obj, features = feature_list, assay = assay,scale.by = scale.by) +
     coord_flip()+
@@ -516,7 +596,7 @@ wookie_dotplot <- function(seurat_obj, feature_list , assay = 'RNA',
 
 
 # Function to plot Cluster relationship Tree
-#' @name wookie_clustertree
+#' @name wookieClustertree
 #' @title Function to plot Cluster relationship Tree
 #' @import Seurat
 #' @import ggplot2
@@ -536,7 +616,7 @@ wookie_dotplot <- function(seurat_obj, feature_list , assay = 'RNA',
 #' @param silentwookie stop wookie from printing puns, default is FALSE
 #' @return p
 #' @export
-wookie_clustertree <- function(seurat_obj, dims = NULL, features = NULL, reorder = FALSE ,
+wookieClustertree <- function(seurat_obj, dims = NULL, features = NULL, reorder = FALSE ,
                                reorder.numeric = FALSE, saveplot = FALSE,assay = 'RNA',
                                reduction = 'pca', slot = 'data',
                                dpi = 1080, height = 10, width = 10, units = 'cm',
@@ -575,7 +655,7 @@ wookie_clustertree <- function(seurat_obj, dims = NULL, features = NULL, reorder
 
 
 # Function to plot expression per cluster
-#' @name wookie_pcePlot
+#' @name wookiePcePlot
 #' @title Function to plot expression per cluster
 #' @import Seurat
 #' @import ggplot2
@@ -591,7 +671,7 @@ wookie_clustertree <- function(seurat_obj, dims = NULL, features = NULL, reorder
 #' @param silentwookie stop wookie from printing puns, default is FALSE
 #' @return pce_plot
 #' @export
-wookie_pcePlot <- function(seurat, seurat_clusters= 'seurat_clusters' ,
+wookiePcePlot <- function(seurat, seurat_clusters= 'seurat_clusters' ,
   saveplot = FALSE,dpi = 1080, height = 10, width = 10, units = 'cm',
   silentwookie = FALSE){
   
@@ -662,7 +742,7 @@ wookie_pcePlot <- function(seurat, seurat_clusters= 'seurat_clusters' ,
 
 
 # Function to plot silhouette scores
-#' @name wookie_silhouettePlot
+#' @name wookieSilhouettePlot
 #' @title Function to plot silhouette scores for each cluster
 #' @import Seurat
 #' @import ggplot2
@@ -675,7 +755,7 @@ wookie_pcePlot <- function(seurat, seurat_clusters= 'seurat_clusters' ,
 #' @param silentwookie stop wookie from printing puns, default is FALSE
 #' @return silhouette plot
 #' @export
-wookie_silhouettePlot <- function(seurat,cluster = 'seurat_clusters',dims = 1:30,
+wookieSilhouettePlot <- function(seurat,cluster = 'seurat_clusters',dims = 1:30,
                                   reduction = 'pca',silentwookie = FALSE){
   seurat$seurat_clusters <- seurat[[cluster]]
   distance_matrix <- dist(Embeddings(seurat[[reduction]])[, dims])
@@ -720,7 +800,7 @@ wookie_silhouettePlot <- function(seurat,cluster = 'seurat_clusters',dims = 1:30
 
 
 # Function to plot Jaccard similarity index
-#' @name wookie_jaccardPlot
+#' @name wookieJaccardPlot
 #' @title Function to plot Jaccard similarity index
 #' @import Seurat
 #' @import reshape2
@@ -746,7 +826,7 @@ wookie_silhouettePlot <- function(seurat,cluster = 'seurat_clusters',dims = 1:30
 #' @param silentwookie stop wookie from printing puns, default is FALSE
 #' @return plot Jaccard similarity index
 #' @export
-wookie_jaccardPlot <- function(seurat_obj,clusters = 'seurat_clusters',
+wookieJaccardPlot <- function(seurat_obj, clusters = 'seurat_clusters',
                                logfc.threshold = 0.95,
                                min.pct = 0.25,
                                test.use = "wilcox",
@@ -756,12 +836,12 @@ wookie_jaccardPlot <- function(seurat_obj,clusters = 'seurat_clusters',
                                title = 'Wookie_Jaccard',
                                saveplot = FALSE,
                                height = 10, width = 10,
-                               dpi = 700,units = 'cm',limitsize = FALSE,
-                               silentwookie = FALSE){
+                               dpi = 700, units = 'cm', limitsize = FALSE,
+                               silentwookie = FALSE) {
   
-  seurat_obj$seurat_clusters <- seurat_obj[[clusters]]
-  Idents(seurat_obj) <- seurat_obj@meta.data$seurat_clusters
-  clusters <- levels(seurat_obj)
+  Seurat::Idents(seurat_obj) <- seurat_obj@meta.data[[clusters]]
+  clusters <- levels(seurat_obj@meta.data[[clusters]])
+  
   # Initialize empty lists to store markers and DEGs for each cluster
   markers_list <- list()
   degs_list <- list()
@@ -772,13 +852,13 @@ wookie_jaccardPlot <- function(seurat_obj,clusters = 'seurat_clusters',
     compare_me <- clusters[clusters != i]
     
     # Find markers for the current cluster
-    markers_i <- FindMarkers(seurat_obj, ident.1 = i, ident.2 = compare_me,
-                             logfc.threshold = logfc.threshold, min.pct = min.pct,
-                             test.use = test.use, verbose = FALSE)
+    markers_i <- Seurat::FindMarkers(seurat_obj, ident.1 = i, ident.2 = compare_me,
+                                     logfc.threshold = logfc.threshold, min.pct = min.pct,
+                                     test.use = test.use, verbose = FALSE)
     markers_i$fdr <- p.adjust(markers_i$p_val, method = "fdr") 
     markers_i <- markers_i[markers_i$fdr < fdr.threshold & 
-                             markers_i$p_val_adj < p_val_bonf.threshold &
-                             markers_i$avg_log2FC > avg.log2fc.threshold , ]
+                           markers_i$p_val_adj < p_val_bonf.threshold &
+                           markers_i$avg_log2FC > avg.log2fc.threshold , ]
     
     # Store markers in the markers_list
     markers_list[[i]] <- markers_i
@@ -797,40 +877,43 @@ wookie_jaccardPlot <- function(seurat_obj,clusters = 'seurat_clusters',
   # Convert the similarity matrix to a data frame
   jaccard_df <- as.data.frame(jaccard_similarities)
   jaccard_df$Cluster1 <- rownames(jaccard_df)
-  jaccard_df <- melt(jaccard_df, id.vars = "Cluster1", variable.name = "Cluster2",
-                     value.name = "Jaccard_Similarity")
+  jaccard_df <- reshape2::melt(jaccard_df, id.vars = "Cluster1", variable.name = "Cluster2",
+                               value.name = "Jaccard_Similarity")
   
   # Convert Cluster1 and Cluster2 to factors with specified levels
   jaccard_df$Cluster1 <- factor(jaccard_df$Cluster1, levels = clusters)
   jaccard_df$Cluster2 <- factor(jaccard_df$Cluster2, levels = clusters)
   
   # Plot the Jaccard similarities
-  js_plot <- ggplot(jaccard_df, aes(x = Cluster1, y = Cluster2, fill = Jaccard_Similarity)) +
-    geom_tile() +
-    geom_text(aes(label = round(Jaccard_Similarity, 2)), color = "white", size = 3) +
-    scale_fill_gradientn(colours = viridis(20,direction = 1)) +
-    theme_minimal() +
-    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1),
-          axis.text.y = element_text(angle = 0, vjust = 0.5, hjust = 1)) +
-    labs(x = "Cluster", y = "Cluster", fill = "Jaccard Similarity",
-         title = "Jaccard Similarity of DEGs between Clusters",
-         caption = title) +
-    coord_fixed(ratio = 1)
+  js_plot <- ggplot2::ggplot(jaccard_df, aes(x = Cluster1, y = Cluster2, fill = Jaccard_Similarity)) +
+    ggplot2::geom_tile() +
+    ggplot2::geom_text(aes(label = round(Jaccard_Similarity, 2)), color = "white", size = 3) +
+    viridis::scale_fill_viridis(option = "G", direction = 1) +
+    ggplot2::theme_minimal() +
+    ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 90, vjust = 0.5, hjust = 1),
+                   axis.text.y = ggplot2::element_text(angle = 0, vjust = 0.5, hjust = 1)) +
+    ggplot2::labs(x = "Cluster", y = "Cluster", fill = "Jaccard Similarity",
+                  title = "Jaccard Similarity of DEGs between Clusters",
+                  caption = title) +
+    ggplot2::coord_fixed(ratio = 1)
   
-  if(saveplot){
-    ggsave('jaccard.jpeg', js_plot,
-           height = height, width = width,
-           dpi = dpi,units = units,limitsize = limitsize)
+  if (saveplot) {
+    ggplot2::ggsave('jaccard.jpeg', js_plot,
+                    height = height, width = width,
+                    dpi = dpi, units = units, limitsize = limitsize)
   }
-  if (silentwookie == FALSE){
+  
+  if (silentwookie == FALSE) {
     wookieSay()
   }
+  
   return(js_plot)
   
 }
 
+
 # Function to get qc stats
-#' @name wookie_get_filters
+#' @name wookieGetFilters
 #' @title Function to get qc filters
 #' @import Seurat
 #' @description Function to get filters, to get data which lies between the mean and +/- multiplier value times SD of the distribution 
@@ -838,7 +921,7 @@ wookie_jaccardPlot <- function(seurat_obj,clusters = 'seurat_clusters',
 #' @param multiplier default is 2 i.e 2 times SD
 #' @param silentwookie stop wookie from printing puns, default is FALSE
 #' @export
-wookie_get_filters <- function(seurat_obj, multiplier = 2,silentwookie = FALSE){
+wookieGetFilters <- function(seurat_obj, multiplier = 2,silentwookie = FALSE){
   ## Get filtering parameters
   count.max <- round(mean(seurat_obj$nCount_RNA) +
                        multiplier * sd(seurat_obj$nCount_RNA), digits = -2)
@@ -869,7 +952,7 @@ wookie_get_filters <- function(seurat_obj, multiplier = 2,silentwookie = FALSE){
 }
 
 # Function to annotate cells given a nested list of marker genes
-#' @name wookie_annotate
+#' @name wookieAnnotate
 #' @title Function to plot cluster Similarity
 #' @import Seurat
 #' @import viridis
@@ -884,7 +967,7 @@ wookie_get_filters <- function(seurat_obj, multiplier = 2,silentwookie = FALSE){
 #' @param silentwookie stop wookie from printing puns, default is FALSE
 #' @return object
 #' @export
-wookie_annotate <- function(object, marker_gene_list, threshold = 0,silentwookie = FALSE) {
+wookieAnnotate <- function(object, marker_gene_list, threshold = 0,silentwookie = FALSE) {
   # Score cells based on marker gene sets
   object <- AddModuleScore(
     object = object,
@@ -976,6 +1059,204 @@ wookie_annotate <- function(object, marker_gene_list, threshold = 0,silentwookie
   }
   return(object)
 }
+
+
+
+# Function to plot entropy of a batch across clusters to evaluate mixing between batches
+#' @name wookieBatchEntropy
+#' @title Function to plot entropy of a batch
+#' @import Seurat
+#' @import viridis
+#' @import entropy
+#' @import ggplot2
+#' @description Function to plot entropy of a batch across clusters to evaluate mixing between batches, higher the entropy better the mixing
+#' @param object Seurat object
+#' @param batch.key metadata column with batch information
+#' @param cluster.key metadata column with cluster information
+#' @param silentwookie stop wookie from printing puns, default is FALSE
+#' @return plot
+#' @export
+wookieBatchEntropy <- function(seurat_obj, batch.key = "batch", cluster.key = 'seurat_clusters',silentwookie = FALSE) {
+  
+  # Assign temporary cluster identities
+  seurat_obj$temp.clusters <- seurat_obj[[cluster.key]]
+  Idents(seurat_obj) <- seurat_obj$temp.clusters
+  
+  # Calculate batch entropy for each cluster
+  calculate_entropy <- function(seurat_obj, cluster_id, batch.key) {
+    cells_in_cluster <- WhichCells(seurat_obj, idents = cluster_id)
+    batch_counts <- table(seurat_obj@meta.data[cells_in_cluster, batch.key])
+    entropy(batch_counts)
+  }
+  
+  # Apply to all clusters
+  clusters <- levels(Idents(seurat_obj))
+  batch_entropies <- sapply(clusters, function(cl) calculate_entropy(seurat_obj, cl, batch.key))
+  
+  # Create a data frame for ggplot2
+  entropy_df <- data.frame(
+    Cluster = factor(clusters, levels = clusters),
+    BatchEntropy = batch_entropies
+  )
+  
+  # Create the plot using ggplot2
+  p <- ggplot(entropy_df, aes(x = Cluster, y = BatchEntropy, fill = BatchEntropy)) +
+    geom_bar(stat = "identity") +
+    scale_fill_viridis_c() +
+    labs(x = cluster.key, y = paste0(batch.key, " Entropy"), title = "Batch Entropy by Cluster") +
+    theme_minimal() +
+    theme(axis.text.x = element_text(angle = 90, hjust = 1))
+  if (silentwookie == FALSE){
+    wookieSay()
+  }
+  return(p)
+}
+
+
+# Function to plot number of clusters across a set of resolutions
+#' @name wookieFindResolution
+#' @title Function to plot number of clusters per resolution
+#' @import Seurat
+#' @import ggplot2
+#' @description Function to plot number of clusters across a set of resolutions, to identify an optimal resolution
+#' @param seurat_obj Seurat object
+#' @param algorithm same as Seurat FindClusters, Default is 1 : Louvain
+#' @param resolution_range range of resolution to plot, default is : c(0.1, 2)
+#' @param resolution_step default is 0.01
+#' @param silentwookie stop wookie from printing puns, default is FALSE
+#' @return plot
+#' @export
+wookieFindResolution <- function(seurat_obj, algorithm = 1,
+                                   resolution_range = c(0.1, 2),
+                                   resolution_step = 0.05,
+                                   silentwookie = FALSE) {
+  resolution_df <- data.frame(Resolution = numeric(), Clusters = integer())
+  
+  for (current_resolution in seq(resolution_range[1], resolution_range[2], resolution_step)) {
+    current_obj <- FindClusters(seurat_obj, resolution = current_resolution, algorithm = algorithm)
+    num_clusters <- length(unique(Idents(current_obj)))
+    resolution_df <- rbind(resolution_df,
+                           data.frame(Resolution = current_resolution,
+                                      Clusters = num_clusters))
+  }
+  
+  resolution_df$Resolution <- as.numeric(as.character(resolution_df$Resolution))
+  
+  plot <- ggplot(resolution_df, aes(x = Resolution, y = Clusters)) +
+    geom_point() +
+    xlab("Resolution") +
+    ylab("Number of Clusters") +
+    theme_minimal() +
+    scale_x_continuous(breaks = seq(resolution_range[1], resolution_range[2], by = 0.1), limits = resolution_range) +
+    scale_y_continuous(limits = c(0, max(resolution_df$Clusters) + 2))
+  if (silentwookie == FALSE){
+    wookieSay()
+  }
+  return(plot)
+}
+
+
+# Function to plot shared neighbors per batch
+#' @name wookieEvaluateBatchCorrection
+#' @title Function to plot shared neighbours per batch
+#' @import Seurat
+#' @import ggplot2
+#' @import dplyr
+#' @import tidyr
+#' @import tibble
+#' @description Function to plot shared neighbours per batch, to evaluate batch correction, 
+#' i.e  the idea being that each cell should have a similar number of shared nearest neighbours from each batch.
+#' @param seurat_obj Seurat object
+#' @param reduction default is 'harmony'
+#' @param batch_col metadata column with batch information
+#' @param group_by_cluster set to TRUE, if the plot should be grouped by clusters. default is FALSE
+#' @param cluster_col metadata column with cluster information to group by
+#' @param k.param k.param for Seurat::FindNeighbours
+#' @param silentwookie stop wookie from printing puns, default is FALSE
+#' @return plot
+#' @export
+wookieEvaluateBatchCorrection <- function(seurat_obj, reduction = 'harmony',
+                                      batch_col = NULL, group_by_cluster = FALSE, 
+                                      cluster_col = NULL,k.param = 20,
+                                      silentwookie = FALSE) {
+  
+  if (is.null(batch_col) || !(batch_col %in% colnames(seurat_obj@meta.data))) {
+    stop('Error: Please provide a valid batch information column name.')
+  }
+  
+  if (group_by_cluster &&
+      (is.null(cluster_col) || !(cluster_col %in%
+                                 colnames(seurat_obj@meta.data)))) {
+    stop('Error: Please provide a valid cluster column name if grouping by cluster.')
+  }
+  
+  # Find neighbors using the specified reduction
+  seurat_obj <- FindNeighbors(seurat_obj, reduction = reduction, return.neighbor = TRUE,k.param = k.param)
+  neighbor.matrix <- seurat_obj@neighbors$RNA.nn@nn.idx
+  
+  # Get batch information
+  batch.info <- seurat_obj@meta.data[[batch_col]]
+  
+  # Get unique batch values
+  batch_levels <- unique(batch.info)
+  
+  # Create a list to store neighbor counts for each batch
+  neighbor_counts_list <- vector("list", length(batch_levels))
+  names(neighbor_counts_list) <- batch_levels
+  
+  # Initialize the neighbor counts vectors
+  for (batch in batch_levels) {
+    neighbor_counts_list[[batch]] <- numeric(length = nrow(neighbor.matrix))
+  }
+  
+  # Count neighbors from each batch for each cell
+  for (i in 1:nrow(neighbor.matrix)) {
+    neighbors <- neighbor.matrix[i, ]
+    for (batch in batch_levels) {
+      neighbor_counts_list[[batch]][i] <- sum(batch.info[neighbors] == batch)
+    }
+  }
+  
+  # Add counts to metadata
+  for (batch in batch_levels) {
+    col_name <- paste0(batch, ".neighbor.counts")
+    seurat_obj@meta.data[[col_name]] <- neighbor_counts_list[[batch]]
+  }
+  
+  # Add cluster ID to metadata if grouping by cluster
+  if (group_by_cluster) {
+    seurat_obj@meta.data$cluster_id <- seurat_obj@meta.data[[cluster_col]]
+  } else {
+    seurat_obj@meta.data$cluster_id <- "All"
+  }
+  
+   # Create a data frame for plotting
+   neighbor_counts <- seurat_obj@meta.data %>%
+    tibble::rownames_to_column("cell") %>%
+    dplyr::select(cell, cluster_id, matches("\\.neighbor\\.counts$")) %>%
+    tidyr::pivot_longer(cols = tidyr::matches("\\.neighbor\\.counts$"),
+                        names_to = "batch",
+                        values_to = "neighbor_count") %>%
+    dplyr::mutate(batch = sub("\\.neighbor\\.counts$", "", batch)) %>%
+    dplyr::arrange(cluster_id, cell)
+  
+  # Plot the data
+  plot <- ggplot2::ggplot(neighbor_counts, ggplot2::aes(x = cell, y = neighbor_count, fill = batch)) +
+    ggplot2::geom_col(position = "stack") +
+    ggplot2::labs(x = "Cell", y = "Number of Neighbors") +
+    ggplot2::ggtitle("Distribution of Nearest Neighbors by Batch for Each Cell") +
+    ggplot2::theme(axis.text.x = ggplot2::element_blank(),  # Hide x-axis text to reduce clutter
+                   axis.ticks.x = ggplot2::element_blank()) +
+    ggplot2::guides(fill = ggplot2::guide_legend(title = "Batch")) +
+    ggplot2::facet_wrap(~ cluster_id, scales = "free_x", nrow = 1)
+  
+  if (!silentwookie) {
+    wookieSay()
+  }
+  
+  return(plot)
+}
+
 
 
 wookieSay <- function() {
