@@ -1,4 +1,4 @@
-# WookieTools - Version 0.1.21
+# WookieTools - Version 0.1.22
 
 # Seurat Object Quality Control function
 #' @name wookieqc
@@ -118,6 +118,7 @@ wookieQc <- function(seurat_obj, nf_min = 0, nf_max = 20000,
 #' @param reduction Reduction method for UMAP (for min.dist and dims modes)
 #' @param max_dims Maximum number of dimensions to test (for dims mode)
 #' @param dims_step Step size for incrementing the number of dimensions (for dims mode)
+#' @param min_dims Minimum number of dimensions, default is 5 i.e 1:5 (for dims mode)
 #' @description Plot multiple UMAPs to test features, min.dist values, or dimensions
 #' @return Combined UMAP plot
 #' @export
@@ -126,7 +127,8 @@ wookieUmapWizard <- function(object = seu_obj, features = NULL,
                               ftype = 'HVG', step = 500,
                               out_name = 'combined_umap', silentwookie = FALSE,
                               mode = 'features', reduction = 'pca',
-                              max_dims = 30, dims_step = 5,nn_min = 10, nn_max = 50, nn_step = 10) {
+                              max_dims = 30, dims_step = 5,nn_min = 10,
+                              nn_max = 50, nn_step = 10, min_dims = 5) {
   if (mode == 'features') {
     if (is.null(features)) {
       stop("Features must be provided for the 'features' mode.")
@@ -166,7 +168,7 @@ wookieUmapWizard <- function(object = seu_obj, features = NULL,
     combined_plot <- plot_grid(plotlist = plot_list)
   } else if (mode == 'dims') {
     plot_list <- list()
-    for (current_dims in seq(dims_step, max_dims, dims_step)) {
+    for (current_dims in seq(min_dims, max_dims, dims_step)) {
       cat(paste0('Calculating UMAP at dims:', current_dims, '...'))
       current_umap <- RunUMAP(object, features = NULL,
                               dims = 1:current_dims, min.dist = min.dist, reduction = reduction,n.neighbors = nn_max)
