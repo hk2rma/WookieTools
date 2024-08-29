@@ -1,4 +1,4 @@
-# WookieTools - Version 0.1.23
+# WookieTools - Version 0.1.24
 
 # Seurat Object Quality Control function
 #' @name wookieqc
@@ -24,18 +24,20 @@
 wookieQc <- function(seurat_obj, nf_min = 0, nf_max = 20000,
                       nc_max = 200000, nc_min = 0, pmt = 20,
                       ptr_max = NULL, ptr_min = NULL, species = 'Mouse',
-                      pt.size = NULL, legend = TRUE,silentwookie = FALSE) {
+                      pt.size = NULL, legend = TRUE,calculateMetrics = TRUE,
+                      silentwookie = FALSE) {
   
   
   if (!inherits(seurat_obj, "Seurat")) {
     stop("Input must be a Seurat object.")
   }
   
+  if (calculateMetrics == TRUE){
   mt_pattern <- if (species == 'Mouse') "^mt-" else "^MT-"
-  
+  ribo_pattern <- if (species == 'Mouse') "^Rp[sl]" else "^RP[SL]"
   seurat_obj[['percent.mt']] <- PercentageFeatureSet(seurat_obj, pattern = mt_pattern)
-  seurat_obj[['percent.ribo']] <- PercentageFeatureSet(seurat_obj, pattern = "^Rp[sl]")
-  
+  seurat_obj[['percent.ribo']] <- PercentageFeatureSet(seurat_obj, pattern = ribo_pattern)
+  }
   seurat_obj <- subset(seurat_obj, nFeature_RNA > nf_min &
                          nFeature_RNA < nf_max & nCount_RNA < nc_max &
                          nCount_RNA > nc_min & percent.mt < pmt)
@@ -482,7 +484,7 @@ wookieGetPC <- function(seurat_obj, reduction = 'pca',silentwookie = FALSE) {
 #' @return plot
 #' @export
 wookiePlotQCMetrics <- function(seu, limits = c(50, 20000), pmt = 15, size = 0.2, alpha = 0.9, silentwookie = FALSE) {
-  dt <- Seurat::Metadata(seu)
+  dt <- seu@meta.data
   dt$mt_category <- ifelse(dt$percent.mt > pmt, paste0(">", pmt), paste0("<", pmt))
   
   p1 <- ggplot2::ggplot(dt, aes(x = nCount_RNA, y = nFeature_RNA, color = percent.mt)) +
