@@ -1,4 +1,4 @@
-# WookieTools - Version 0.1.24
+# WookieTools - Version 0.1.3
 
 # Seurat Object Quality Control function
 #' @name wookieqc
@@ -1260,6 +1260,164 @@ wookieEvaluateBatchCorrection <- function(seurat_obj, reduction = 'harmony',
   
   return(plot)
 }
+
+
+# Function to create a 3D Umap
+#' @name wookieUMAP3D 
+#' @title Plot 3D Umap
+#' @import Seurat
+#' @import plotly
+#' @import viridis
+#' @import ggplot2
+#' @description Plot 3D UMAP
+#' @param seu Seurat Object
+#' @param group.by metadata column to group by
+#' @param palette color palette to plot, Default is NULL
+#' @param marker.size default 2
+#' @param marker.width default 2
+#' @param reduction default is umap
+#' @param silentwookie stop wookie from printing puns, default is FALSE
+#' @return plot
+#' @export
+wookieUMAP3D <- function(seu, group.by = 'seurat_clusters', palette = NULL, marker.size = 2,
+                         marker.width = 2, reduction = "umap", silentwookie = TRUE) {
+  # Check if input is a Seurat object
+  if (!inherits(seu, "Seurat")) {
+    stop("The input must be a Seurat object.")
+  }
+  
+  # Check if group.by column exists in metadata
+  if (!(group.by %in% colnames(seu@meta.data))) {
+    stop(paste("The group.by column", group.by, "is not found in metadata."))
+  }
+  
+  # Check if the specified reduction exists in Seurat object
+  if (!(reduction %in% Reductions(seu))) {
+    stop(paste("The reduction", reduction, "is not available in the Seurat object."))
+  }
+  
+  # Fetch UMAP embeddings (or other specified reduction) - expecting 3D
+  umap_coords <- Embeddings(seu, reduction = reduction)[, 1:3]
+  
+  # Fetch group.by data from metadata
+  group_data <- seu@meta.data[[group.by]]
+  
+  # Combine UMAP coordinates and group data for plotting
+  plot.data <- data.frame(umap_1 = umap_coords[, 1], 
+                          umap_2 = umap_coords[, 2], 
+                          umap_3 = umap_coords[, 3], 
+                          group = group_data)
+  
+  # Add labels for hover info
+  plot.data$label <- paste(rownames(plot.data))
+  
+  # Create 3D scatter plot using plotly
+  fig <- plot_ly(data = plot.data, 
+                 x = ~umap_1, y = ~umap_2, z = ~umap_3, 
+                 color = ~group, 
+                 colors = palette,
+                 type = "scatter3d", 
+                 mode = "markers", 
+                 marker = list(size = marker.size, width = marker.width),
+                 text = ~label,
+                 hoverinfo = "text")
+  
+  # Call wookieSay() if silentwookie is FALSE
+  if (!silentwookie) {
+    wookieSay()
+  }
+  
+  return(fig)
+}
+
+# Function to create a 3D FeaturePlot
+#' @name wookie3DFeaturePlot 
+#' @title Plot 3D Umap
+#' @import Seurat
+#' @import plotly
+#' @import viridis
+#' @import ggplot2
+#' @description Plot 3D UMAP
+#' @param seu Seurat Object
+#' @param group.by metadata column to group by
+#' @param palette color palette to plot, Default is NULL
+#' @param marker.size default 2
+#' @param opacity default 1
+#' @param silentwookie stop wookie from printing puns, default is FALSE
+#' @return plot
+#' @export
+wookie3DFeaturePlot <- function(seu, gene = NULL, palette = viridis::viridis(50), 
+                                marker.size = 2, reduction = 'umap',
+                                silentwookie = TRUE, opacity = 1) {
+  # Check if input is a Seurat object
+  if (!inherits(seu, "Seurat")) {
+    stop("The input must be a Seurat object.")
+  }
+  
+  # Check if the gene exists in the Seurat object
+  if (!(gene %in% rownames(seu))) {
+    stop(paste("The gene", gene, "is not found in the Seurat object."))
+  }
+  
+  # Check if UMAP dimensions exist in Seurat object
+  if (!"umap" %in% Reductions(seu)) {
+    stop("UMAP has not been computed in the Seurat object.")
+  }
+  
+  # Fetch UMAP embeddings (3D)
+  umap_coords <- Embeddings(seu, reduction = reduction)[, 1:3]
+  
+  # Fetch gene expression data
+  gene_expression <- FetchData(seu, vars = gene, layer = "data")
+  
+  # Combine UMAP and gene expression data
+  plot.data <- data.frame(umap_1 = umap_coords[, 1], 
+                          umap_2 = umap_coords[, 2], 
+                          umap_3 = umap_coords[, 3], 
+                          gene_expr = gene_expression[[gene]])
+  
+  # Add label for hover info
+  plot.data$label <- paste(rownames(plot.data), " - ", plot.data$gene_expr, sep = "")
+  
+  # Create 3D plot using Plotly
+  fig <- plot_ly(data = plot.data, 
+                 x = ~umap_1, y = ~umap_2, z = ~umap_3, 
+                 color = ~gene_expr,
+                 opacity = opacity,
+                 colors = palette,  
+                 type = "scatter3d", 
+                 mode = "markers",
+                 marker = list(size = marker.size), 
+                 text = ~label,
+                 hoverinfo = "text") 
+  
+  # Call wookieSay() function if silentwookie is FALSE
+  if (!silentwookie) {
+    wookieSay()
+  }
+  
+  return(fig)
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
