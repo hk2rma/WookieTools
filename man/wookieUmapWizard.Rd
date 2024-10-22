@@ -19,7 +19,8 @@ wookieUmapWizard(
   dims_step = 5,
   nn_min = 10,
   nn_max = 50,
-  nn_step = 10
+  nn_step = 10,
+  min_dims = 5
 )
 }
 \arguments{
@@ -46,6 +47,8 @@ wookieUmapWizard(
 \item{max_dims}{Maximum number of dimensions to test (for dims mode)}
 
 \item{dims_step}{Step size for incrementing the number of dimensions (for dims mode)}
+
+\item{min_dims}{Minimum number of dimensions, default is 5 i.e 1:5 (for dims mode)}
 }
 \value{
 Combined UMAP plot

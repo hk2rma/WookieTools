@@ -17,6 +17,7 @@ wookieQc(
   species = "Mouse",
   pt.size = NULL,
   legend = TRUE,
+  calculateMetrics = TRUE,
   silentwookie = FALSE
 )
 }

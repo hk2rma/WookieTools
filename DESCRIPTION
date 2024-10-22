@@ -1,9 +1,9 @@
 Package: WookieTools
 Type: Package
 Title: Handy Tools for Single-Cell Analysis using Seurat
-Version: 0.1.21
+Version: 0.1.3
 Encoding: UTF-8
-RoxygenNote: 7.3.1
+RoxygenNote: 7.3.2
 VignetteBuilder: knitr
 Authors@R: 
   person("Harikrishnan Ajith", role = c("aut", "cre"), email = "ha573@cam.ac.uk")
